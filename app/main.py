@@ -2,7 +2,7 @@ from authenticate import login
 from booking import book_court
 
 def main():
-    print("automated court booker!")
+    print("automated court booker !")
 
     print("\n_____LOGIN ATTEMPT_____")
     login_success = login()
