@@ -22,8 +22,28 @@ def login():
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
     }
 
-    print(url)
-    print(payload)
-    print(headers)
+    session = requests.Session()
+
+    response = session.post(url, json=payload, headers=headers)
+
+    print("---")
+    print("HTTP Status Code:", response.status_code)
+    print("HTTP Headers:", response.headers)
+    print("HTTP Response Body:", response.json())
+    print("---")
+
+    data = response.json()
+
+    print("status:", data.get("status"))
+    print("code:", data.get("code"))
+    print("message:", data.get("message"))
+    print("error:", data.get("error"))
+
+    print("---")
+
+    token_type = data["data"].get("token_type")
+    access_token = data["data"].get("access_token")
+    print("token_type:", token_type)
+    print("access_token:", access_token)
 
     return True
