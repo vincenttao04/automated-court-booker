@@ -46,4 +46,10 @@ def login():
     print("token_type:", token_type)
     print("access_token:", access_token)
 
+    session.headers.update({"Authorization": f"{token_type} {access_token}"})
+
+    print("---")
+
+    print("Session headers updated")
+
     return True
