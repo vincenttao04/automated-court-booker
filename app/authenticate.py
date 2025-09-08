@@ -4,8 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
-def login():
+def login(session: requests.Session):
 
     url = os.getenv("LOGIN_URL")
 
@@ -21,8 +20,6 @@ def login():
         "Referer": "https://book.bnh.org.nz/",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
     }
-
-    session = requests.Session()
 
     response = session.post(url, json=payload, headers=headers)
 
