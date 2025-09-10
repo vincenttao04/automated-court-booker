@@ -25,31 +25,18 @@ def login():
 
     # Make authentication/login POST request
     response = session.post(url, json=payload, headers=headers)
-
-    print("---")
-    print("HTTP Status Code:", response.status_code)
-    print("HTTP Headers:", response.headers)
-    print("HTTP Response Body:", response.json())
-    print("---")
-
     data = response.json()
 
-    print("status:", data.get("status"))
-    print("code:", data.get("code"))
-    print("message:", data.get("message"))
-    print("error:", data.get("error"))
+    # Check if login was successful
+    if data.get("status") != "success":
+        raise Exception("Login failed.")
 
-    print("---")
+    # Update session headers with authentication token
+    session.headers.update(
+        {
+            "Authorization": f"{data["data"].get("token_type")} {data["data"].get("access_token")}"
+        }
+    )
 
-    token_type = data["data"].get("token_type")
-    access_token = data["data"].get("access_token")
-    print("token_type:", token_type)
-    print("access_token:", access_token)
-
-    session.headers.update({"Authorization": f"{token_type} {access_token}"})
-
-    print("---")
-
-    print("Session headers updated")
-
-    return True
+    print(f"{os.getenv('LOGIN_NUMBER')} login successful")
+    return session
