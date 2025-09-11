@@ -1,5 +1,9 @@
-import requests
+# Standard Library
 import os
+import time
+
+# Third-Party Libraries
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -43,6 +47,10 @@ def login():
 
 
 def logout(session: requests.Session):
+    # TEMP: DELAY LOGOUT FUNCTION TO SIMULATE SESSION ACTIVITY
+    print("time delay: 10 seconds")
+    time.sleep(10)
+
     # Fetch request payload
     url = os.getenv("LOGOUT_URL")
     payload = {"device_id": "Badminton-Test-ABC-001"}
