@@ -16,7 +16,6 @@ def main():
         print("booking is unsuccessful")
 
     logout(session)
-    print("logout is successful !")
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ def login():
 
     # Check if login was successful
     if data.get("status") != "success":
-        raise Exception("Login failed.")
+        raise Exception("LOGIN FAILED")
 
     # Update session headers with authentication token
     session.headers.update(
@@ -57,4 +57,9 @@ def logout(session: requests.Session):
     response = session.post(url, json=payload, headers=headers)
     data = response.json()
 
-    print(data)
+    # Check if logout was successful
+    if data.get("status") != "success":
+        raise Exception("LOGOUT FAILED")
+
+    print(f"{os.getenv('LOGIN_NUMBER')} logout successful")
+    return
