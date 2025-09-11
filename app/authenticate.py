@@ -1,5 +1,9 @@
-import requests
+# Standard Library
 import os
+import time
+
+# Third-Party Libraries
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,8 +13,8 @@ def login():
     # Fetch request payload
     url = os.getenv("LOGIN_URL")
     payload = {
-        "number": os.getenv("LOGIN_NUMBER"),
-        "password": os.getenv("LOGIN_PASSWORD"),
+        "number": os.getenv("USER_NUMBER"),
+        "password": os.getenv("USER_PASSWORD"),
         "device_id": "Badminton-Test-ABC-001",
     }
     headers = {
@@ -29,7 +33,7 @@ def login():
 
     # Check if login was successful
     if data.get("status") != "success":
-        raise Exception("Login failed.")
+        raise Exception("LOGIN FAILED")
 
     # Update session headers with authentication token
     session.headers.update(
@@ -38,5 +42,32 @@ def login():
         }
     )
 
-    print(f"{os.getenv('LOGIN_NUMBER')} login successful")
+    print(f"{os.getenv('USER_NUMBER')} login successful")
     return session
+
+
+def logout(session: requests.Session):
+    # TEMP: DELAY LOGOUT FUNCTION TO SIMULATE SESSION ACTIVITY
+    print("time delay: 10 seconds")
+    time.sleep(10)
+
+    # Fetch request payload
+    url = os.getenv("LOGOUT_URL")
+    payload = {"device_id": "Badminton-Test-ABC-001"}
+    headers = {
+        "Content-Type": "application/json",
+        "Origin": "https://book.bnh.org.nz",
+        "Referer": "https://book.bnh.org.nz/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+    }
+
+    # Make authentication/logout POST request
+    response = session.post(url, json=payload, headers=headers)
+    data = response.json()
+
+    # Check if logout was successful
+    if data.get("status") != "success":
+        raise Exception("LOGOUT FAILED")
+
+    print(f"{os.getenv('USER_NUMBER')} logout successful")
+    return

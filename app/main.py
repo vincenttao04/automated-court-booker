@@ -1,4 +1,4 @@
-from authenticate import login
+from authenticate import login, logout
 from booking import book_court
 
 
@@ -14,6 +14,8 @@ def main():
         print("booking is successful")
     else:
         print("booking is unsuccessful")
+
+    logout(session)
 
 
 if __name__ == "__main__":
