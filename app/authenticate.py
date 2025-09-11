@@ -9,8 +9,8 @@ def login():
     # Fetch request payload
     url = os.getenv("LOGIN_URL")
     payload = {
-        "number": os.getenv("LOGIN_NUMBER"),
-        "password": os.getenv("LOGIN_PASSWORD"),
+        "number": os.getenv("USER_NUMBER"),
+        "password": os.getenv("USER_PASSWORD"),
         "device_id": "Badminton-Test-ABC-001",
     }
     headers = {
@@ -38,7 +38,7 @@ def login():
         }
     )
 
-    print(f"{os.getenv('LOGIN_NUMBER')} login successful")
+    print(f"{os.getenv('USER_NUMBER')} login successful")
     return session
 
 
@@ -61,5 +61,5 @@ def logout(session: requests.Session):
     if data.get("status") != "success":
         raise Exception("LOGOUT FAILED")
 
-    print(f"{os.getenv('LOGIN_NUMBER')} logout successful")
+    print(f"{os.getenv('USER_NUMBER')} logout successful")
     return
