@@ -40,3 +40,15 @@ def login():
 
     print(f"{os.getenv('LOGIN_NUMBER')} login successful")
     return session
+
+
+def logout(session: requests.Session):
+    # Fetch request payload
+    url = os.getenv("LOGOUT_URL")
+    payload = {"device_id": "Badminton-Test-ABC-001"}
+    headers = {
+        "Content-Type": "application/json",
+        "Origin": "https://book.bnh.org.nz",
+        "Referer": "https://book.bnh.org.nz/",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+    }
