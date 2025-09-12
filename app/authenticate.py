@@ -53,7 +53,12 @@ def login():
         }
     )
 
-    print(f"{os.getenv('USER_NUMBER')} login successful")
+    # TEMP: PRINT DEBUG INFO
+    print("\nRate Limit Remaining:", response.headers.get("X-RateLimit-Remaining"))
+    print("Response Status Code:", data.get("code"))
+    print("Response Status:", data.get("status"))
+
+    print(f"\n{os.getenv('USER_NUMBER')} login successful")
     return session
 
 
@@ -74,5 +79,5 @@ def logout(session: requests.Session):
     if data.get("status") != "success":
         raise Exception("LOGOUT FAILED")
 
-    print(f"{os.getenv('USER_NUMBER')} logout successful")
+    print(f"\n{os.getenv('USER_NUMBER')} logout successful")
     return
