@@ -16,7 +16,7 @@ def main():
     # else:
     #     print("booking is unsuccessful")
 
-    fetch_court_availability(session)
+    fetch_court_availability(session, "bond_crescent")
 
     fetch_user_detail(session, "credit_balance")
 
