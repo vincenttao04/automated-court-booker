@@ -9,14 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def login():
-    # Fetch request payload
-    url = os.getenv("LOGIN_URL")
-    payload = {
-        "number": os.getenv("USER_NUMBER"),
-        "password": os.getenv("USER_PASSWORD"),
-        "device_id": "Badminton-Test-ABC-001",
-    }
+def create_session():
     headers = {
         "Content-Type": "application/json",
         "Origin": "https://book.bnh.org.nz",
@@ -27,8 +20,24 @@ def login():
     # Instantiate request session
     session = requests.Session()
 
+    session.headers.update(headers)
+
+    return session
+
+
+def login():
+    # Fetch request payload
+    url = os.getenv("LOGIN_URL")
+    payload = {
+        "number": os.getenv("USER_NUMBER"),
+        "password": os.getenv("USER_PASSWORD"),
+        "device_id": "Badminton-Test-ABC-001",
+    }
+
+    session = create_session()
+
     # Make authentication/login POST request
-    response = session.post(url, json=payload, headers=headers)
+    response = session.post(url, json=payload)
     data = response.json()
 
     # Check if login was successful
@@ -54,15 +63,9 @@ def logout(session: requests.Session):
     # Fetch request payload
     url = os.getenv("LOGOUT_URL")
     payload = {"device_id": "Badminton-Test-ABC-001"}
-    headers = {
-        "Content-Type": "application/json",
-        "Origin": "https://book.bnh.org.nz",
-        "Referer": "https://book.bnh.org.nz/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
-    }
 
     # Make authentication/logout POST request
-    response = session.post(url, json=payload, headers=headers)
+    response = session.post(url, json=payload)
     data = response.json()
 
     # Check if logout was successful
