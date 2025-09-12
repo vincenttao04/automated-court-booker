@@ -1,4 +1,4 @@
-from user import login, logout, fetch_user_details
+from user import login, logout, fetch_user_detail
 from booking import book_court
 
 
@@ -15,8 +15,9 @@ def main():
     # else:
     #     print("booking is unsuccessful")
 
-    fetch_user_details(session, "credit_balance")
+    fetch_user_detail(session, "credit_balance")
 
+    print("\n_____LOGOUT ATTEMPT_____")
     logout(session)
 
 
