@@ -1,8 +1,9 @@
 from user import login, logout, fetch_user_detail
-from booking import book_court
+from booking import book_court, fetch_court_availability
 
 
 def main():
+
     print("automated court booker !")
 
     print("\n_____LOGIN ATTEMPT_____")
@@ -14,6 +15,8 @@ def main():
     #     print("booking is successful")
     # else:
     #     print("booking is unsuccessful")
+
+    fetch_court_availability(session)
 
     fetch_user_detail(session, "credit_balance")
 
