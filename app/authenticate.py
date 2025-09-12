@@ -20,6 +20,7 @@ def create_session():
     # Instantiate request session
     session = requests.Session()
 
+    # Update session headers
     session.headers.update(headers)
 
     return session
@@ -34,6 +35,7 @@ def login():
         "device_id": "Badminton-Test-ABC-001",
     }
 
+    # Create request session
     session = create_session()
 
     # Make authentication/login POST request
@@ -57,7 +59,7 @@ def login():
 
 def logout(session: requests.Session):
     # TEMP: DELAY LOGOUT FUNCTION TO SIMULATE SESSION ACTIVITY
-    print("time delay: 10 seconds")
+    print("\ntime delay: 10 seconds")
     time.sleep(10)
 
     # Fetch request payload
