@@ -83,11 +83,14 @@ def logout(session: requests.Session):
     return
 
 
-def fetch_credit_balance(session: requests.Session):
+def fetch_user_details(session: requests.Session, property: str):
     url = os.getenv("USER_DATA")
 
     response = session.get(url)
 
-    print(response)
+    print(response.json())
 
-    print(f"\nCredit Balance: {response.json()["data"].get("credit_balance")}")
+    print(
+        f"\n{property.title().replace("_", " ")}: {response.json()["data"].get(property)}"
+    )
+    return
