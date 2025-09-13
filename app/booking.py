@@ -37,4 +37,19 @@ def fetch_court_availability(session: requests.Session, location: str):
 
 
 def identify_available_courts(data: str):
+    longest_availability = 0
+
+    for court_number, court_info in data.items():
+        print(f"\n{court_number}")
+
+        current = 0
+        for slot in court_info.get("timetable"):
+            print(slot)
+            if slot.get("status") == "Available":
+                current += 1
+                longest_availability = max(longest_availability, current)
+            else:
+                current = 0
+
+    print(f"\n{longest_availability}")
     return
