@@ -38,18 +38,28 @@ def fetch_court_availability(session: requests.Session, location: str):
 
 def identify_available_courts(data: str):
     longest_availability = 0
+    best_court = None
+    best_start = None
 
     for court_number, court_info in data.items():
-        print(f"\n{court_number}")
-
         current = 0
+        current_start = None
+
         for slot in court_info.get("timetable"):
-            print(slot)
             if slot.get("status") == "Available":
+                if current == 0:
+                    current_start = slot.get("start_time")
                 current += 1
-                longest_availability = max(longest_availability, current)
+
+                if current > longest_availability:
+                    longest_availability = current
+                    best_court = court_number
+                    best_start = current_start
             else:
                 current = 0
+                current_start = None
 
-    print(f"\n{longest_availability}")
+    print(f"\nLongest availability: {longest_availability} slots")
+    print(f"Court: {best_court}, starting at {best_start}")
+
     return
