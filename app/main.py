@@ -1,5 +1,5 @@
 from user import login, logout, fetch_user_detail
-from booking import book_court, fetch_court_availability, identify_available_courts
+from booking import book_court, fetch_court_availability, identify_longest_available_courts
 
 TEST_DATA = {
     "1": {
@@ -1194,7 +1194,7 @@ def main():
     # fetch_user_detail(session, "credit_balance")
 
     # data = fetch_court_availability(session, "bond_crescent")
-    identify_available_courts(TEST_DATA)
+    identify_longest_available_courts(TEST_DATA)
 
     # print("\n_____LOGOUT ATTEMPT_____")
     # logout(session)
