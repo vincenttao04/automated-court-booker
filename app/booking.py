@@ -37,5 +37,4 @@ def fetch_court_availability(session: requests.Session, location: str):
 
 
 def identify_available_courts(data: str):
-    print(data)
     return
