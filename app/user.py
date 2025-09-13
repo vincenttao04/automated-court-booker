@@ -38,7 +38,7 @@ def login():
     # Create request session
     session = create_session()
 
-    # Make authentication/login POST request
+    # Make login POST request
     response = session.post(url, json=payload)
     data = response.json()
 
@@ -71,7 +71,7 @@ def logout(session: requests.Session):
     url = os.getenv("LOGOUT_URL")
     payload = {"device_id": "Badminton-Test-ABC-001"}
 
-    # Make authentication/logout POST request
+    # Make logout POST request
     response = session.post(url, json=payload)
     data = response.json()
 
@@ -80,4 +80,21 @@ def logout(session: requests.Session):
         raise Exception("LOGOUT FAILED")
 
     print(f"\n{os.getenv('USER_NUMBER')} logout successful")
+    return
+
+
+def fetch_user_detail(session: requests.Session, property: str):
+    # Fetch request payload
+    url = os.getenv("USER_DATA")
+
+    # Make fetch user detail GET request
+    response = session.get(url)
+    data = response.json()
+
+    # Check if fetch user detail was successful
+    if data.get("status") != "success":
+        raise Exception("FETCH USER DETAIL FAILED")
+
+    property_label = property.title().replace("_", " ")
+    print(f"\n{property_label}: {data["data"].get(property)}")
     return
