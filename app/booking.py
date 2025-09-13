@@ -40,6 +40,7 @@ def identify_available_courts(data: str):
     longest_availability = 0
     best_court = None
     best_start = None
+    best_end = None
 
     for court_number, court_info in data.items():
         current = 0
@@ -55,11 +56,12 @@ def identify_available_courts(data: str):
                     longest_availability = current
                     best_court = court_number
                     best_start = current_start
+                    best_end = slot.get("end_time")
             else:
                 current = 0
                 current_start = None
 
     print(f"\nLongest availability: {longest_availability} slots")
-    print(f"Court: {best_court}, starting at {best_start}")
+    print(f"Court: {best_court}, starting at {best_start}, ending at {best_end}")
 
     return
