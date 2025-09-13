@@ -26,10 +26,16 @@ def fetch_court_availability(session: requests.Session, location: str):
     if data.get("status") != "success":
         raise Exception("FETCH COURT AVAILABILITY FAILED")
 
+    # Extract stadium specific court availability
     if location == "corinthian_drive":
-        print(data["data"].get("2").get("courts"))
+        data = data["data"].get("2").get("courts")  # corinthian drive stadium
     else:
-        print(data["data"].get("1").get("courts"))
+        data = data["data"].get("1").get("courts")  # bond crescent stadium and others
 
     print("fetch court availability successful")
+    return data
+
+
+def identify_available_courts(data: str):
+    print(data)
     return
