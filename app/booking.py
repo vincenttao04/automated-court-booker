@@ -13,9 +13,10 @@ def book_court():
     return True
 
 
-def fetch_court_availability(session: requests.Session, location: str):
+def get_court_schedule(session: requests.Session, location: str):
     # Fetch request payload
-    request_date = str(date.today())
+    # request_date = str(date.today())
+    request_date = "2025-10-13"
     url = os.getenv("COURT_AVAILABILITY") + request_date
 
     # Make fetch court availability GET request
@@ -36,7 +37,7 @@ def fetch_court_availability(session: requests.Session, location: str):
     return data
 
 
-def identify_longest_available_courts(data: str):
+def find_court(data: str):
     best = {
         "court_id": "",
         "court_name": "",
