@@ -32,7 +32,7 @@ def fetch_court_availability(session: requests.Session, location: str):
     else:
         data = data["data"].get("1").get("courts")  # bond crescent stadium and others
 
-    print("fetch court availability successful")
+    print(f"fetch court availability successful ({request_date})")
     return data
 
 
