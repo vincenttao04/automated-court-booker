@@ -9,10 +9,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def book_court():
-    return True
-
-
 def get_court_schedule(session: requests.Session, location: str):
     # Fetch request payload
     # request_date = str(date.today())
@@ -39,10 +35,11 @@ def get_court_schedule(session: requests.Session, location: str):
 
 def find_court(data: dict):
     booking_info = {
-        "court_id": "",
+        "court_id": None,
         "court_name": "",
         "start_time": "",
         "end_time": "",
+        "price": None,
     }
     best_length = 0
 
@@ -59,7 +56,7 @@ def find_court(data: dict):
                 if current_length > best_length:
                     booking_info.update(
                         {
-                            "court_id": court_number,
+                            "court_id": int(court_number),
                             "start_time": current_start,
                             "end_time": slot["end_time"],
                         }
@@ -69,11 +66,26 @@ def find_court(data: dict):
                 current_length = 0
                 current_start = None
 
-    booking_info["court_name"] = "Court" + str(booking_info.get("court_id"))
+    booking_info["court_name"] = "Court " + str(booking_info.get("court_id"))
+    booking_info["price"] = best_length * 27
 
     print(f"\nlongest availability: {best_length} slots/hours")
     print(
         f"court: {booking_info.get("court_id")}, starting at {booking_info.get("start_time")}, ending at {booking_info.get("end_time")}"
     )
 
-    return
+    return booking_info
+
+
+def book_court(session: requests.Session, booking_info: dict):
+    payload = {
+        **booking_info,
+        "booking_id": "",
+        "date": "2025-10-13",
+        "gst": "",
+        "subtotal": "",
+        "total": "",
+        "user_id": "",
+    }
+
+    print(payload)
