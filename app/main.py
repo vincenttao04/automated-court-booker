@@ -18,7 +18,8 @@ def main():
     fetch_user_detail(session, "credit_balance")
 
     data = get_court_schedule(session, "bond_crescent")
-    find_court(data)
+    data = find_court(data)
+    book_court(session, data)
 
     print("\n_____LOGOUT ATTEMPT_____")
     logout(session)
