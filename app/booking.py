@@ -79,8 +79,8 @@ def find_court(data: dict):
 
 def book_court(session: requests.Session, booking_info: dict):
     # Fetch request payload
-    url = os.getenv("BOOKING_URL")
-    payload = {
+    url_one = os.getenv("BOOKING_URL")
+    payload_one = {
         **booking_info,
         "booking_id": "",
         "date": "2025-10-13",
@@ -91,11 +91,18 @@ def book_court(session: requests.Session, booking_info: dict):
     }
 
     # Make booking create POST request
-    response = session.post(url, json=payload)
-    data = response.json()
+    response_one = session.post(url_one, json=payload_one)
+    data_one = response_one.json()
 
     # Check if booking_create was successful
-    if data.get("status") != "success":
+    if data_one.get("status") != "success":
         raise Exception("BOOKING CREATE FAILED")
 
-    print(data)
+    print(data_one)  # temp
+    booking_id = data_one["data"].get("id")
+
+    url_two = os.getenv("CHECKOUT_URL") + booking_id
+    response_two = session.get(url_two)
+    data_two = response_two.json()
+
+    print(data_two)  # temp
