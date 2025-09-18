@@ -37,8 +37,8 @@ def get_court_schedule(session: requests.Session, location: str):
     return data
 
 
-def find_court(data: str):
-    best = {
+def find_court(data: dict):
+    booking_info = {
         "court_id": "",
         "court_name": "",
         "start_time": "",
@@ -56,8 +56,8 @@ def find_court(data: str):
                     current_start = slot.get("start_time")
                 current += 1
 
-                if current > best.get("length"):
-                    best.update(
+                if current > booking_info.get("length"):
+                    booking_info.update(
                         {
                             "court_id": court_number,
                             "start_time": current_start,
@@ -69,11 +69,11 @@ def find_court(data: str):
                 current = 0
                 current_start = None
 
-    best["court_name"] = "Court" + str(best.get("court_id"))
+    booking_info["court_name"] = "Court" + str(booking_info.get("court_id"))
 
-    print(f"\nLongest availability: {best.get("length")} slots/hours")
+    print(f"\nLongest availability: {booking_info.get("length")} slots/hours")
     print(
-        f"Court: {best.get("court_id")}, starting at {best.get("start_time")}, ending at {best.get("end_time")}"
+        f"Court: {booking_info.get("court_id")}, starting at {booking_info.get("start_time")}, ending at {booking_info.get("end_time")}"
     )
 
     return
