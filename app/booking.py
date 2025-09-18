@@ -13,7 +13,7 @@ def get_court_schedule(session: requests.Session, location: str):
     # Fetch request payload
     # request_date = str(date.today())
     request_date = "2025-10-13"
-    url = os.getenv("COURT_AVAILABILITY") + request_date
+    url = os.getenv("COURT_SCHEDULE") + request_date
 
     # Make fetch court availability GET request
     response = session.get(url)
@@ -78,6 +78,7 @@ def find_court(data: dict):
 
 
 def book_court(session: requests.Session, booking_info: dict):
+    url = os.getenv("BOOKING_URL")
     payload = {
         **booking_info,
         "booking_id": "",
@@ -88,4 +89,7 @@ def book_court(session: requests.Session, booking_info: dict):
         "user_id": "",
     }
 
-    print(payload)
+    response = session.post(url, json=payload)
+    data = response.json()
+
+    print(data)
