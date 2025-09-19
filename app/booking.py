@@ -99,7 +99,7 @@ def book_court(session: requests.Session, booking_info: dict):
         raise Exception("BOOKING CREATE FAILED")
 
     print(data_one)  # temp
-    booking_id = data_one["data"].get("id")
+    booking_id = str(data_one["data"].get("id"))
 
     url_two = os.getenv("CHECKOUT_URL") + booking_id
     response_two = session.get(url_two)
