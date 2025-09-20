@@ -8,12 +8,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# booking_date = str(date.today())
+booking_date = "2025-10-13"
+
 
 def get_court_schedule(session: requests.Session, location: str):
     # Fetch request payload
-    # request_date = str(date.today())
-    request_date = "2025-10-13"
-    url = os.getenv("COURT_SCHEDULE") + request_date
+    url = os.getenv("COURT_SCHEDULE") + booking_date
 
     # Make fetch court availability GET request
     response = session.get(url)
@@ -29,12 +30,19 @@ def get_court_schedule(session: requests.Session, location: str):
     else:
         data = data["data"].get("1").get("courts")  # bond crescent stadium and others
 
-    print(f"fetch court availability successful ({request_date})")
+    print(f"fetch court availability successful ({booking_date})")
     return data
 
 
 def find_court(data: dict):
     booking_info = {
+        "booking_id": "",
+        "date": booking_date,
+        "gst": "",
+        "subtotal": "",
+        "total": "",
+        "user_id": "",
+        # remaining values to be filled in this function
         "court_id": None,
         "court_name": "",
         "start_time": "",
@@ -80,24 +88,16 @@ def find_court(data: dict):
 def book_court(session: requests.Session, booking_info: dict):
     # Fetch request_one payload
     url_one = os.getenv("BOOKING_URL")
-    payload_one = {
-        **booking_info,
-        "booking_id": "",
-        "date": "2025-10-13",
-        "gst": "",
-        "subtotal": "",
-        "total": "",
-        "user_id": "",
-    }
 
     # Make booking_create POST request
-    response_one = session.post(url_one, json=payload_one)
+    response_one = session.post(url_one, json=booking_info)
     data_one = response_one.json()
 
     # Check if booking_create was successful
     if data_one.get("status") != "success":
         raise Exception("BOOKING CREATE FAILED")
 
+    print("\n")
     print(data_one)  # temp
     booking_id = str(data_one["data"].get("id"))
 
@@ -114,4 +114,7 @@ def book_court(session: requests.Session, booking_info: dict):
     if data_one.get("status") != "success":
         raise Exception("BOOKING CHECKOUT FAILED")
 
+    print("\n")
     print(data_two)  # temp
+
+    return data_two
