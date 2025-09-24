@@ -111,10 +111,16 @@ def book_court(session: requests.Session, booking_info: dict):
     data_two = response_two.json()
 
     # Check if booking_checkout was successful
-    if data_one.get("status") != "success":
+    if data_two.get("status") != "success":
         raise Exception("BOOKING CHECKOUT FAILED")
 
     print("\n")
     print(data_two)  # temp
+
+    #######
+    # TODO: VERIFY BOOKING PRICE IN URL 1 AND URL 2 ARE THE SAME - If yes, url 2 may be redundant
+    # temp condition to verify TODO
+    if int(data_one["data"].get("total")) != data_two["data"].get("current_price"):
+        raise Exception("BOOKING PRICES ARE NOT THE SAME")
 
     return data_two
