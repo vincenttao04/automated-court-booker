@@ -122,5 +122,13 @@ def book_court(session: requests.Session, booking_info: dict):
     # temp condition to verify TODO
     if int(data_one["data"].get("total")) != data_two["data"].get("current_price"):
         raise Exception("BOOKING PRICES ARE NOT THE SAME")
+    else:
+        print("booking prices for both urls are the same")
 
-    return data_two
+    return data_one["data"].get("user_id"), data_one["data"].get(
+        "id"
+    )  # returns user_id and booking_id as integers
+
+
+def pay_court(session: requests.Session, user_id: int, booking_id: int):
+    return

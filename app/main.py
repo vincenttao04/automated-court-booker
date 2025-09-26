@@ -1,9 +1,5 @@
 from user import login, logout, fetch_user_detail
-from booking import (
-    book_court,
-    get_court_schedule,
-    find_court,
-)
+from booking import book_court, find_court, get_court_schedule, pay_court
 
 
 def main():
@@ -19,7 +15,8 @@ def main():
 
     data = get_court_schedule(session, "bond_crescent")
     data = find_court(data)
-    book_court(session, data)
+    user_id, booking_id = book_court(session, data)
+    pay_court(session, user_id, booking_id)
 
     print("\n_____LOGOUT ATTEMPT_____")
     logout(session)
