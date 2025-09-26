@@ -131,12 +131,17 @@ def book_court(session: requests.Session, booking_info: dict):
 
 
 def pay_court(session: requests.Session, user_id: int, booking_id: int):
+    # Fetch request payload
     url = os.getenv("PAYMENT_URL") + f"{user_id}/{booking_id}"
-    print(url)
 
+    # Make court payment GET request
     response = session.get(url)
-    
-    # content type is text/html; charset=UTF-8
+
+    # Content-Type: text/html; charset=UTF-8
     print(response.text)
+
+    # Check if court payment was successful
+    if "Payment Success" not in response.text:
+        raise Exception("COURT PAYMENT FAILED")
 
     return
