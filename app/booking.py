@@ -131,4 +131,12 @@ def book_court(session: requests.Session, booking_info: dict):
 
 
 def pay_court(session: requests.Session, user_id: int, booking_id: int):
+    url = os.getenv("PAYMENT_URL") + f"{user_id}/{booking_id}"
+    print(url)
+
+    response = session.get(url)
+    
+    # content type is text/html; charset=UTF-8
+    print(response.text)
+
     return
