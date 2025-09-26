@@ -11,12 +11,15 @@ def main():
 
     print("\n_____BOOKING ATTEMPT_____")
 
-    fetch_user_detail(session, "credit_balance")
+    fetch_user_detail(session, "credit_balance")  # balance before booking
 
     data = get_court_schedule(session, "bond_crescent")
     data = find_court(data)
     user_id, booking_id = book_court(session, data)
     pay_court(session, user_id, booking_id)
+
+    print("\n_____BOOKING COMPLETED_____")
+    fetch_user_detail(session, "credit_balance")  # balance after booking
 
     print("\n_____LOGOUT ATTEMPT_____")
     logout(session)
