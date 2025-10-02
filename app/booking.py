@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # booking_date = str(date.today())
-booking_date = "2025-10-13"
+booking_date = "2025-10-17"
 
 
 def get_court_schedule(session: requests.Session, location: str):
@@ -122,5 +122,28 @@ def book_court(session: requests.Session, booking_info: dict):
     # temp condition to verify TODO
     if int(data_one["data"].get("total")) != data_two["data"].get("current_price"):
         raise Exception("BOOKING PRICES ARE NOT THE SAME")
+    else:
+        print("\nbooking prices for both urls are the same")
 
-    return data_two
+    return data_one["data"].get("user_id"), data_one["data"].get(
+        "id"
+    )  # returns user_id and booking_id as integers
+
+
+def pay_court(session: requests.Session, user_id: int, booking_id: int):
+    # Fetch request payload
+    url = os.getenv("PAYMENT_URL") + f"{user_id}/{booking_id}"
+
+    # Make court payment GET request
+    response = session.get(url)
+
+    # Content-Type: text/html; charset=UTF-8
+    print(response.text)
+
+    # Check if court payment was successful
+    if "Payment Success" not in response.text:
+        raise Exception("COURT PAYMENT FAILED")
+
+    print("\ncourt payment successful - check email for confirmation/receipt")
+
+    return
