@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # booking_date = str(date.today())
-booking_date = "2025-10-13"
+booking_date = "2025-10-17"
 
 
 def get_court_schedule(session: requests.Session, location: str):
@@ -123,7 +123,7 @@ def book_court(session: requests.Session, booking_info: dict):
     if int(data_one["data"].get("total")) != data_two["data"].get("current_price"):
         raise Exception("BOOKING PRICES ARE NOT THE SAME")
     else:
-        print("booking prices for both urls are the same")
+        print("\nbooking prices for both urls are the same")
 
     return data_one["data"].get("user_id"), data_one["data"].get(
         "id"
@@ -143,5 +143,7 @@ def pay_court(session: requests.Session, user_id: int, booking_id: int):
     # Check if court payment was successful
     if "Payment Success" not in response.text:
         raise Exception("COURT PAYMENT FAILED")
+
+    print("\ncourt payment successful - check email for confirmation/receipt")
 
     return
