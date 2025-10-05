@@ -10,6 +10,8 @@ load_dotenv()
 
 # booking_date = str(date.today())
 booking_date = "2025-10-18"
+start_time = ""
+end_time = ""
 
 
 def get_court_schedule(session: requests.Session, location: str):
@@ -29,6 +31,17 @@ def get_court_schedule(session: requests.Session, location: str):
         data = data["data"].get("2").get("courts")  # corinthian drive stadium
     else:
         data = data["data"].get("1").get("courts")  # bond crescent stadium and others
+
+    # Filter courts only within the desired time range
+    if start_time and end_time:
+        for court_id, court_data in data.items():
+            timetable = court_data.get("timetable", [])
+
+            court_data["timetable"] = [
+                slot
+                for slot in timetable
+                if start_time <= slot["start_time"] < end_time
+            ]
 
     print(f"fetch court availability successful ({booking_date})")
     return data
@@ -74,7 +87,7 @@ def find_court(data: dict):
                 current_length = 0
                 current_start = None
 
-    ## Check if any court availability was found
+    # Check if any court availability was found
     if best_length == 0:
         return None
 
