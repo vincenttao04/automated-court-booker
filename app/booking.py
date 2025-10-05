@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # booking_date = str(date.today())
-booking_date = "2025-10-27"
+booking_date = "2025-10-18"
 
 
 def get_court_schedule(session: requests.Session, location: str):
@@ -74,6 +74,7 @@ def find_court(data: dict):
                 current_length = 0
                 current_start = None
 
+    ## Check if any court availability was found
     if best_length == 0:
         return None
 
