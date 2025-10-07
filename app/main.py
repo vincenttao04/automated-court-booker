@@ -21,7 +21,7 @@ def main():
         user_id, booking_id = book_court(session, data)
         # pay_court(session, user_id, booking_id)
     else:
-        print("no available courts found")
+        print("\nno available courts found")
 
     print("\n_____BOOKING COMPLETED_____")
     fetch_user_detail(session, "credit_balance")  # balance after booking
