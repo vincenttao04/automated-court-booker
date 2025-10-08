@@ -35,7 +35,7 @@ def get_court_schedule(session: requests.Session, location: str):
 
     # Filter courts only within the desired time range
     if start_time and end_time:
-        for court_id, court_data in data.items():
+        for court_data in data.values():
             timetable = court_data.get("timetable", [])
 
             court_data["timetable"] = [
