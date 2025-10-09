@@ -9,10 +9,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # booking_date = str(date.today())
-booking_date = "2025-10-18"  # temp
+booking_date = "2025-11-17"  # temp
 # times must be in "HH:MM" 24-hour format (i.e. "09:00", not "9:00")
-start_time = "12:00"
-end_time = "16:00"
+start_time = "06:00"
+end_time = "17:00"
 
 
 def get_court_schedule(session: requests.Session, location: str):
@@ -106,45 +106,20 @@ def find_court(data: dict):
 
 def book_court(session: requests.Session, booking_info: dict):
     # Fetch request_one payload
-    url_one = os.getenv("BOOKING_URL")
+    url = os.getenv("BOOKING_URL")
 
     # Make booking_create POST request
-    response_one = session.post(url_one, json=booking_info)
-    data_one = response_one.json()
+    response = session.post(url, json=booking_info)
+    data = response.json()
 
     # Check if booking_create was successful
-    if data_one.get("status") != "success":
+    if data.get("status") != "success":
         raise Exception("BOOKING CREATE FAILED")
 
     print("\n")
-    print(data_one)  # temp
-    booking_id = str(data_one["data"].get("id"))
+    print(data)
 
-    #######
-
-    # Fetch request_two payload
-    url_two = os.getenv("CHECKOUT_URL") + booking_id
-
-    # Make booking_checkout GET request
-    response_two = session.get(url_two)
-    data_two = response_two.json()
-
-    # Check if booking_checkout was successful
-    if data_two.get("status") != "success":
-        raise Exception("BOOKING CHECKOUT FAILED")
-
-    print("\n")
-    print(data_two)  # temp
-
-    #######
-    # TODO: VERIFY BOOKING PRICE IN URL 1 AND URL 2 ARE THE SAME - If yes, url 2 may be redundant
-    # temp condition to verify TODO
-    if int(data_one["data"].get("total")) != data_two["data"].get("current_price"):
-        raise Exception("BOOKING PRICES ARE NOT THE SAME")
-    else:
-        print("\nbooking prices for both urls are the same")
-
-    return data_one["data"].get("user_id"), data_one["data"].get(
+    return data["data"].get("user_id"), data["data"].get(
         "id"
     )  # returns user_id and booking_id as integers
 
