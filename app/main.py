@@ -17,9 +17,9 @@ def main():
 
     data = find_court(data)
 
-    if data is not None:
+    while data is not None:
         user_id, booking_id = book_court(session, data)
-        # pay_court(session, user_id, booking_id)
+        pay_court(session, user_id, booking_id)
     else:
         print("\nno available courts found")
 
