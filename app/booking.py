@@ -12,7 +12,7 @@ load_dotenv()
 booking_date = "2025-11-17"  # temp
 # times must be in "HH:MM" 24-hour format (i.e. "09:00", not "9:00")
 start_time = "06:00"
-end_time = "17:00"
+end_time = "23:00"
 
 
 def get_court_schedule(session: requests.Session, location: str):
