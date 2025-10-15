@@ -13,12 +13,12 @@ def main():
 
     fetch_user_detail(session, "credit_balance")  # balance before booking
 
-    data = get_court_schedule(session, "bond_crescent")
+    schedule = get_court_schedule(session, "bond_crescent")
 
-    data = find_court(data)
+    booking_info = find_court(schedule)
 
-    while data is not None:
-        user_id, booking_id = book_court(session, data)
+    while booking_info is not None:
+        user_id, booking_id = book_court(session, booking_info)
         pay_court(session, user_id, booking_id)
 
     print("\nno available courts found")
