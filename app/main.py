@@ -10,16 +10,16 @@ def main():
     session = login()
 
     print("\n_____BOOKING ATTEMPT_____")
-
     fetch_user_detail(session, "credit_balance")  # balance before booking
 
     schedule = get_court_schedule(session, "bond_crescent")
-
     booking_info = find_court(schedule)
 
     while booking_info is not None:
         user_id, booking_id = book_court(session, booking_info)
         pay_court(session, user_id, booking_id)
+        schedule = get_court_schedule(session, "bond_crescent")
+        booking_info = find_court(schedule)
 
     print("\nno available courts found")
 
