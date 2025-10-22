@@ -1,5 +1,5 @@
-from user import login, logout, fetch_user_detail
-from booking import book_court, find_court, get_court_schedule, pay_court
+from app.user import login, logout, fetch_user_detail
+from app.booking import book_court, find_court, get_court_schedule, pay_court
 
 
 def main():
