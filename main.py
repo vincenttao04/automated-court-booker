@@ -16,10 +16,14 @@ def main():
     booking_info = find_court(schedule)
 
     while booking_info is not None:
-        user_id, booking_id = book_court(session, booking_info)
-        pay_court(session, user_id, booking_id)
-        schedule = get_court_schedule(session, "bond_crescent")
-        booking_info = find_court(schedule)
+        try:
+            user_id, booking_id = book_court(session, booking_info)
+            pay_court(session, user_id, booking_id)
+            schedule = get_court_schedule(session, "bond_crescent")
+            booking_info = find_court(schedule)
+        except Exception as e:
+            print(f"Error: {e}")
+            break
 
     print("\nno available courts found")
 

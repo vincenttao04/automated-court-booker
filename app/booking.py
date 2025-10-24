@@ -114,7 +114,7 @@ def book_court(session: requests.Session, booking_info: dict):
 
     # Check if booking_create was successful
     if data.get("status") != "success":
-        raise Exception("BOOKING CREATE FAILED")
+        raise Exception("CREATE BOOKING FAILED")
 
     print("\n")
     print(data)
