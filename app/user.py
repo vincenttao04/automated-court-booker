@@ -26,7 +26,7 @@ def create_session():
     return session
 
 
-def login():
+def login() -> None:
     # Fetch request payload
     url = os.getenv("LOGIN_URL")
     payload = {
@@ -62,7 +62,7 @@ def login():
     return session
 
 
-def logout(session: requests.Session):
+def logout(session: requests.Session) -> None:
     # TEMP: DELAY LOGOUT FUNCTION TO SIMULATE SESSION ACTIVITY
     print("\ntime delay: 10 seconds")
     time.sleep(10)
@@ -83,7 +83,7 @@ def logout(session: requests.Session):
     return
 
 
-def fetch_user_detail(session: requests.Session, property: str):
+def fetch_user_detail(session: requests.Session, property: str) -> None:
     # Fetch request payload
     url = os.getenv("USER_DATA")
 

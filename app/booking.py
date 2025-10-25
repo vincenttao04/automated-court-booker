@@ -15,7 +15,7 @@ start_time = "06:00"
 end_time = "23:00"
 
 
-def get_court_schedule(session: requests.Session, location: str):
+def get_court_schedule(session: requests.Session, location: str) -> dict:
     # Fetch request payload
     url = os.getenv("COURT_SCHEDULE") + booking_date
 
@@ -49,7 +49,7 @@ def get_court_schedule(session: requests.Session, location: str):
     return data
 
 
-def find_court(data: dict):
+def find_court(data: dict) -> dict | None:
     booking_info = {
         "booking_id": "",
         "date": booking_date,
@@ -104,7 +104,7 @@ def find_court(data: dict):
     return booking_info
 
 
-def book_court(session: requests.Session, booking_info: dict):
+def book_court(session: requests.Session, booking_info: dict) -> tuple[int | int]:
     # Fetch request_one payload
     url = os.getenv("BOOKING_URL")
 
@@ -124,7 +124,7 @@ def book_court(session: requests.Session, booking_info: dict):
     )  # returns user_id and booking_id as integers
 
 
-def pay_court(session: requests.Session, user_id: int, booking_id: int):
+def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
     # Fetch request payload
     url = os.getenv("PAYMENT_URL") + f"{user_id}/{booking_id}"
 
