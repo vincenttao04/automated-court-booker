@@ -8,16 +8,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# booking_date = str(date.today())
-booking_date = "2025-11-17"  # temp
+# BOOKING_DATE = str(date.today())
+BOOKING_DATE = "2025-11-17"  # temp
 # times must be in "HH:MM" 24-hour format (i.e. "09:00", not "9:00")
-start_time = "06:00"
-end_time = "23:00"
+START_TIME = "06:00"
+END_TIME = "23:00"
+PRICE_PER_COURT = 27  # price tier required: Community Member (Peak)
 
 
 def get_court_schedule(session: requests.Session, location: str) -> dict:
     # Fetch request payload
-    url = os.getenv("COURT_SCHEDULE") + booking_date
+    url = f"{os.getenv('COURT_SCHEDULE')}{BOOKING_DATE}"
 
     # Make fetch court availability GET request
     response = session.get(url)
@@ -34,17 +35,17 @@ def get_court_schedule(session: requests.Session, location: str) -> dict:
         data = data["data"].get("1").get("courts")  # bond crescent stadium and others
 
     # Filter courts only within the desired time range
-    if start_time and end_time:
+    if START_TIME and END_TIME:
         for court_data in data.values():
             timetable = court_data.get("timetable", [])
 
             court_data["timetable"] = [
                 slot
                 for slot in timetable
-                if start_time <= slot["start_time"] < end_time
+                if START_TIME <= slot["start_time"] < END_TIME
             ]
 
-    print(f"fetch court availability successful ({booking_date})")
+    print(f"fetch court availability successful ({BOOKING_DATE})")
     print(data)
     return data
 
@@ -52,7 +53,7 @@ def get_court_schedule(session: requests.Session, location: str) -> dict:
 def find_court(data: dict) -> dict | None:
     booking_info = {
         "booking_id": "",
-        "date": booking_date,
+        "date": BOOKING_DATE,
         "gst": "",
         "subtotal": "",
         "total": "",
@@ -93,8 +94,8 @@ def find_court(data: dict) -> dict | None:
     if best_length == 0:
         return None
 
-    booking_info["court_name"] = "Court " + str(booking_info.get("court_id"))
-    booking_info["price"] = best_length * 27
+    booking_info["court_name"] = f"Court {booking_info.get('court_id')}"
+    booking_info["price"] = best_length * PRICE_PER_COURT
 
     print(f"\nlongest availability: {best_length} slots/hours")
     print(
@@ -126,7 +127,7 @@ def book_court(session: requests.Session, booking_info: dict) -> tuple[int | int
 
 def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
     # Fetch request payload
-    url = os.getenv("PAYMENT_URL") + f"{user_id}/{booking_id}"
+    url = f"{os.getenv('PAYMENT_URL')}{user_id}/{booking_id}"
 
     # Make court payment GET request
     response = session.get(url)
