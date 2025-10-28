@@ -8,13 +8,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# booking_date = str(date.today())
-booking_date = "2025-10-17"
+# BOOKING_DATE = str(date.today())
+BOOKING_DATE = "2025-11-17"  # temp
+# times must be in "HH:MM" 24-hour format (i.e. "09:00", not "9:00")
+START_TIME = "06:00"
+END_TIME = "23:00"
+PRICE_PER_COURT = 27  # price tier required: Community Member (Peak)
 
 
-def get_court_schedule(session: requests.Session, location: str):
+def get_court_schedule(session: requests.Session, location: str) -> dict:
     # Fetch request payload
-    url = os.getenv("COURT_SCHEDULE") + booking_date
+    url = f"{os.getenv('COURT_SCHEDULE')}{BOOKING_DATE}"
 
     # Make fetch court availability GET request
     response = session.get(url)
@@ -30,14 +34,26 @@ def get_court_schedule(session: requests.Session, location: str):
     else:
         data = data["data"].get("1").get("courts")  # bond crescent stadium and others
 
-    print(f"fetch court availability successful ({booking_date})")
+    # Filter courts only within the desired time range
+    if START_TIME and END_TIME:
+        for court_data in data.values():
+            timetable = court_data.get("timetable", [])
+
+            court_data["timetable"] = [
+                slot
+                for slot in timetable
+                if START_TIME <= slot["start_time"] < END_TIME
+            ]
+
+    print(f"fetch court availability successful ({BOOKING_DATE})")
+    print(data)
     return data
 
 
-def find_court(data: dict):
+def find_court(data: dict) -> dict | None:
     booking_info = {
         "booking_id": "",
-        "date": booking_date,
+        "date": BOOKING_DATE,
         "gst": "",
         "subtotal": "",
         "total": "",
@@ -74,8 +90,12 @@ def find_court(data: dict):
                 current_length = 0
                 current_start = None
 
-    booking_info["court_name"] = "Court " + str(booking_info.get("court_id"))
-    booking_info["price"] = best_length * 27
+    # Check if any court availability was found
+    if best_length == 0:
+        return None
+
+    booking_info["court_name"] = f"Court {booking_info.get('court_id')}"
+    booking_info["price"] = best_length * PRICE_PER_COURT
 
     print(f"\nlongest availability: {best_length} slots/hours")
     print(
@@ -85,54 +105,29 @@ def find_court(data: dict):
     return booking_info
 
 
-def book_court(session: requests.Session, booking_info: dict):
+def book_court(session: requests.Session, booking_info: dict) -> tuple[int | int]:
     # Fetch request_one payload
-    url_one = os.getenv("BOOKING_URL")
+    url = os.getenv("BOOKING_URL")
 
     # Make booking_create POST request
-    response_one = session.post(url_one, json=booking_info)
-    data_one = response_one.json()
+    response = session.post(url, json=booking_info)
+    data = response.json()
 
     # Check if booking_create was successful
-    if data_one.get("status") != "success":
-        raise Exception("BOOKING CREATE FAILED")
+    if data.get("status") != "success":
+        raise Exception("CREATE BOOKING FAILED")
 
     print("\n")
-    print(data_one)  # temp
-    booking_id = str(data_one["data"].get("id"))
+    print(data)
 
-    #######
-
-    # Fetch request_two payload
-    url_two = os.getenv("CHECKOUT_URL") + booking_id
-
-    # Make booking_checkout GET request
-    response_two = session.get(url_two)
-    data_two = response_two.json()
-
-    # Check if booking_checkout was successful
-    if data_two.get("status") != "success":
-        raise Exception("BOOKING CHECKOUT FAILED")
-
-    print("\n")
-    print(data_two)  # temp
-
-    #######
-    # TODO: VERIFY BOOKING PRICE IN URL 1 AND URL 2 ARE THE SAME - If yes, url 2 may be redundant
-    # temp condition to verify TODO
-    if int(data_one["data"].get("total")) != data_two["data"].get("current_price"):
-        raise Exception("BOOKING PRICES ARE NOT THE SAME")
-    else:
-        print("\nbooking prices for both urls are the same")
-
-    return data_one["data"].get("user_id"), data_one["data"].get(
+    return data["data"].get("user_id"), data["data"].get(
         "id"
     )  # returns user_id and booking_id as integers
 
 
-def pay_court(session: requests.Session, user_id: int, booking_id: int):
+def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
     # Fetch request payload
-    url = os.getenv("PAYMENT_URL") + f"{user_id}/{booking_id}"
+    url = f"{os.getenv('PAYMENT_URL')}{user_id}/{booking_id}"
 
     # Make court payment GET request
     response = session.get(url)
