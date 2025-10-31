@@ -270,7 +270,7 @@ def simulate_booking(test_court_data: dict, result: dict | None) -> None:
     return result
 
 
-def test_find_court_returns_longest_available(test_court_data):
+def test_find_court_returns_all_available_sequences(test_court_data):
     result = find_court(test_court_data)
     assert result is not None
     assert result["court_id"] == 1
