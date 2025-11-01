@@ -1,4 +1,5 @@
 import pytest
+import os
 
 from app.booking import find_court, PRICE_PER_COURT
 
@@ -256,6 +257,14 @@ def test_court_data():
             ],
         },
     }
+
+
+def test_booking_env_variables_exist():
+    required_env_variables = ["COURT_SCHEDULE", "BOOKING_URL", "PAYMENT_URL"]
+
+    for var in required_env_variables:
+        value = os.getenv(var)
+        assert value, f"Missing environment variable: {var}"
 
 
 def simulate_booking(test_court_data: dict, result: dict | None) -> None:
