@@ -4,6 +4,7 @@ import time
 
 # Third-Party Libraries
 import requests
+from requests.adapters import HTTPAdapter
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,6 +20,13 @@ def create_session():
 
     # Instantiate request session
     session = requests.Session()
+
+    # Create a connection pool adapter
+    adapter = HTTPAdapter(pool_connections=5, pool_maxsize=5)
+
+    # Mount it for both HTTP and HTTPS
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
 
     # Update session headers
     session.headers.update(headers)
