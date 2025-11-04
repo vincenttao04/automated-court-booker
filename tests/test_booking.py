@@ -337,6 +337,10 @@ def test_find_court_returns_all_available_sequences(test_court_data):
     assert result["start_time"] == "11:00"
     assert result["end_time"] == "12:00"
     assert result["price"] == PRICE_PER_COURT * 1
+    simulate_booking(test_court_data, result)
+
+    result = find_court(test_court_data)
+    assert result is None
 
     end_time = time.perf_counter()
     duration = end_time - start_time
@@ -345,7 +349,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
 
 def test_find_court_returns_none_when_no_availability(test_court_data):
     start_time = time.perf_counter()
-    
+
     for court in test_court_data.values():
         for slot in court.get("timetable"):
             if slot.get("status") == "Available":
