@@ -92,6 +92,7 @@ def find_court(data: dict) -> dict | None:
 
     # Check if any court availability was found
     if best_length == 0:
+        print("\nno available courts found")
         return None
 
     booking_info["court_name"] = f"Court {booking_info.get('court_id')}"
