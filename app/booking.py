@@ -11,7 +11,7 @@ load_dotenv()
 # BOOKING_DATE = str(date.today())
 BOOKING_DATE = "2025-11-17"  # temp
 # times must be in "HH:MM" 24-hour format (i.e. "09:00", not "9:00")
-START_TIME = "06:00"
+START_TIME = "12:00"
 END_TIME = "23:00"
 PRICE_PER_COURT = 27  # price tier required: Community Member (Peak)
 
@@ -30,14 +30,14 @@ def get_court_schedule(session: requests.Session, location: str) -> dict:
 
     # Extract stadium specific court availability
     if location == "corinthian_drive":
-        data = data["data"].get("2").get("courts")  # corinthian drive stadium
+        data = data["data"]["2"]["courts"]  # corinthian drive stadium
     else:
-        data = data["data"].get("1").get("courts")  # bond crescent stadium and others
+        data = data["data"]["1"]["courts"]  # bond crescent stadium and others
 
     # Filter courts only within the desired time range
     if START_TIME and END_TIME:
         for court_data in data.values():
-            timetable = court_data.get("timetable", [])
+            timetable = court_data["timetable"]
 
             court_data["timetable"] = [
                 slot
@@ -71,10 +71,10 @@ def find_court(data: dict) -> dict | None:
         current_length = 0
         current_start = None
 
-        for slot in court_info.get("timetable"):
-            if slot.get("status") == "Available":
+        for slot in court_info["timetable"]:
+            if slot["status"] == "Available":
                 if current_length == 0:
-                    current_start = slot.get("start_time")
+                    current_start = slot["start_time"]
                 current_length += 1
 
                 if current_length > best_length:
@@ -95,12 +95,12 @@ def find_court(data: dict) -> dict | None:
         print("\nno available courts found")
         return None
 
-    booking_info["court_name"] = f"Court {booking_info.get('court_id')}"
+    booking_info["court_name"] = f"Court {booking_info['court_id']}"
     booking_info["price"] = best_length * PRICE_PER_COURT
 
     print(f"\nlongest availability: {best_length} slots/hours")
     print(
-        f"court: {booking_info.get("court_id")}, starting at {booking_info.get("start_time")}, ending at {booking_info.get("end_time")}"
+        f"court: {booking_info['court_id']}, starting at {booking_info["start_time"]}, ending at {booking_info["end_time"]}"
     )
 
     return booking_info
@@ -121,8 +121,9 @@ def book_court(session: requests.Session, booking_info: dict) -> tuple[int | int
     print("\n")
     print(data)
 
-    return data["data"].get("user_id"), data["data"].get(
-        "id"
+    return (
+        data["data"]["user_id"],
+        data["data"]["id"],
     )  # returns user_id and booking_id as integers
 
 
