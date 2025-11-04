@@ -1,5 +1,7 @@
-import pytest
 import os
+import time
+
+import pytest
 
 from app.booking import find_court, PRICE_PER_COURT
 
@@ -267,6 +269,7 @@ def test_booking_env_variables_exist():
         assert value, f"Missing environment variable: {var}"
 
 
+# Helper function
 def simulate_booking(test_court_data: dict, result: dict | None) -> None:
     if result is None:
         return
@@ -280,6 +283,8 @@ def simulate_booking(test_court_data: dict, result: dict | None) -> None:
 
 
 def test_find_court_returns_all_available_sequences(test_court_data):
+    start_time = time.perf_counter()
+
     result = find_court(test_court_data)
     assert result is not None
     assert result["court_id"] == 1
@@ -333,8 +338,14 @@ def test_find_court_returns_all_available_sequences(test_court_data):
     assert result["end_time"] == "12:00"
     assert result["price"] == PRICE_PER_COURT * 1
 
+    end_time = time.perf_counter()
+    duration = end_time - start_time
+    print(f"\n[test_find_court_returns_all_available_sequences] {duration:.6f} seconds")
+
 
 def test_find_court_returns_none_when_no_availability(test_court_data):
+    start_time = time.perf_counter()
+    
     for court in test_court_data.values():
         for slot in court.get("timetable"):
             if slot.get("status") == "Available":
@@ -342,3 +353,9 @@ def test_find_court_returns_none_when_no_availability(test_court_data):
 
     result = find_court(test_court_data)
     assert result is None
+
+    end_time = time.perf_counter()
+    duration = end_time - start_time
+    print(
+        f"\n[test_find_court_returns_none_when_no_availability] {duration:.6f} seconds"
+    )
