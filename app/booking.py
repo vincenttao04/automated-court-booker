@@ -46,7 +46,7 @@ def get_court_schedule(session: requests.Session, location: str) -> dict:
             ]
 
     print(f"fetch court availability successful ({BOOKING_DATE})")
-    print(data)
+    print(data["1"]["timetable"][0]["start_time"])
     return data
 
 
