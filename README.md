@@ -11,3 +11,5 @@ testing
 
 - `python -m pytest -v`
 - `python -m pytest -v -s` -> with output printed
+
+change booking preferences using /config.yaml (local dev only)
