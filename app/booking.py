@@ -1,15 +1,18 @@
 # Standard Library
 import os
-from datetime import date
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 # Third-Party Libraries
 import requests
 from dotenv import load_dotenv
 
 load_dotenv()
+# NZ_TZ = ZoneInfo("Pacific/Auckland")
+# now_nz = datetime.now(NZ_TZ)
+# BOOKING_DATE = now_nz.date() + timedelta(weeks=3)
 
-# BOOKING_DATE = str(date.today())
-BOOKING_DATE = "2025-11-17"  # temp
+BOOKING_DATE = "2025-11-17"  # temp, testing purposes only
 # times must be in "HH:MM" 24-hour format (i.e. "09:00", not "9:00")
 START_TIME = "12:00"
 END_TIME = "23:00"
