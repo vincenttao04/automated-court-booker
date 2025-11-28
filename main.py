@@ -17,48 +17,53 @@ def main():
     print(schedule)
 
     if schedule:
-        start_time = schedule.get("start")
-        end_time = schedule.get("end")
+        user_start_time = schedule.get("start")
+        user_end_time = schedule.get("end")
 
-        if start_time is None:
-            start_time = "06:00"
+        if user_start_time is None:
+            user_start_time = "06:00"
 
-        if end_time is None:
-            end_time = "23:00"
+        if user_end_time is None:
+            user_end_time = "23:00"
 
-        print(start_time)
-        print(end_time)
+        print(user_start_time)
+        print(user_end_time)
 
     location = config["locations"][0]
     print(location)
 
     print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
-    # print("automated court booker !")
+    print("automated court booker !")
 
-    # start_time = time.perf_counter()
-    # print("\n_____LOGIN ATTEMPT_____")
-    # session = login()
-    # end_time = time.perf_counter()
-    # duration = end_time - start_time
-    # print(f"\n[LOGIN] {duration:.6f} seconds")
+    start_time = time.perf_counter()
+    print("\n_____LOGIN ATTEMPT_____")
+    session = login()
+    end_time = time.perf_counter()
+    duration = end_time - start_time
+    print(f"\n[LOGIN] {duration:.6f} seconds")
 
-    # print("\n_____BOOKING ATTEMPT_____")
-    # fetch_user_detail(session, "credit_balance")  # balance before booking
+    print("\n_____BOOKING ATTEMPT_____")
+    fetch_user_detail(session, "credit_balance")  # balance before booking
 
-    # start_time = time.perf_counter()
-    # schedule = get_court_schedule(session, "bond_crescent")
-    # booking_info = find_court(schedule)
+    start_time = time.perf_counter()
+    schedule = get_court_schedule(
+        session, "bond_crescent", user_start_time, user_end_time
+    )
+    booking_info = find_court(schedule)
+
+    print(booking_info)
 
     # while booking_info is not None:
     #     try:
     #         user_id, booking_id = book_court(session, booking_info)
     #         pay_court(session, user_id, booking_id)
-    #         schedule = get_court_schedule(session, "bond_crescent")
+    #         schedule = get_court_schedule(session, "bond_crescent", user_start_time, user_end_time)
     #         booking_info = find_court(schedule)
     #     except Exception as e:
     #         print(f"Error: {e}")
     #         break
+
     # end_time = time.perf_counter()
     # duration = end_time - start_time
     # print(f"\n[BOOKING] {duration:.6f} seconds")
@@ -66,8 +71,8 @@ def main():
     # print("\n_____BOOKING COMPLETED_____")
     # fetch_user_detail(session, "credit_balance")  # balance after booking
 
-    # print("\n_____LOGOUT ATTEMPT_____")
-    # logout(session)
+    print("\n_____LOGOUT ATTEMPT_____")
+    logout(session)
 
 
 if __name__ == "__main__":

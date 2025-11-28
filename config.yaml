@@ -5,7 +5,7 @@ locations:
 
 price_per_court: 27
 
-# Time is in 24-hour format.
+# Time must be in "HH:MM" 24-hour format (i.e. "09:00", not "9:00")
 # If a day is set to null, no booking will be made on that day.
 # If a day has a start and end time, a booking will be made within that time range.
 # If a day has a start time and no end time, the end time will default to "23:00"
