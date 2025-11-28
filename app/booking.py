@@ -12,14 +12,13 @@ load_dotenv()
 # now_nz = datetime.now(NZ_TZ)
 # BOOKING_DATE = now_nz.date() + timedelta(weeks=3)
 
-BOOKING_DATE = "2025-11-17"  # temp, testing purposes only
-# times must be in "HH:MM" 24-hour format (i.e. "09:00", not "9:00")
-START_TIME = "12:00"
-END_TIME = "23:00"
+BOOKING_DATE = "2026-01-27"  # temp, testing purposes only
 PRICE_PER_COURT = 27  # price tier required: Community Member (Peak)
 
 
-def get_court_schedule(session: requests.Session, location: str) -> dict:
+def get_court_schedule(
+    session: requests.Session, location: str, user_start_time: str, user_end_time: str
+) -> dict:
     # Fetch request payload
     url = f"{os.getenv('COURT_SCHEDULE')}{BOOKING_DATE}"
 
@@ -33,19 +32,19 @@ def get_court_schedule(session: requests.Session, location: str) -> dict:
 
     # Extract stadium specific court availability
     if location == "corinthian_drive":
-        data = data["data"]["2"]["courts"]  # corinthian drive stadium
+        data = data["data"]["2"]["courts"]  # corinthian drive
     else:
-        data = data["data"]["1"]["courts"]  # bond crescent stadium and others
+        data = data["data"]["1"]["courts"]  # bond crescent
 
     # Filter courts only within the desired time range
-    if START_TIME and END_TIME:
+    if user_start_time and user_end_time:
         for court_data in data.values():
             timetable = court_data["timetable"]
 
             court_data["timetable"] = [
                 slot
                 for slot in timetable
-                if START_TIME <= slot["start_time"] < END_TIME
+                if user_start_time <= slot["start_time"] < user_end_time
             ]
 
     print(f"fetch court availability successful ({BOOKING_DATE})")
