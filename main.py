@@ -47,9 +47,7 @@ def main():
     fetch_user_detail(session, "credit_balance")  # balance before booking
 
     start_time = time.perf_counter()
-    schedule = get_court_schedule(
-        session, "bond_crescent", user_start_time, user_end_time
-    )
+    schedule = get_court_schedule(session, location, user_start_time, user_end_time)
     booking_info = find_court(schedule)
 
     print(booking_info)
@@ -58,7 +56,7 @@ def main():
     #     try:
     #         user_id, booking_id = book_court(session, booking_info)
     #         pay_court(session, user_id, booking_id)
-    #         schedule = get_court_schedule(session, "bond_crescent", user_start_time, user_end_time)
+    #         schedule = get_court_schedule(session, location, user_start_time, user_end_time)
     #         booking_info = find_court(schedule)
     #     except Exception as e:
     #         print(f"Error: {e}")
