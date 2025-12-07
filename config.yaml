@@ -1,7 +1,7 @@
 # Only 1 location can be active at a time. Comment out the one not in use. If 2 locations are active, the program will fetch the first.
 locations:
   - bond_crescent
-  # - corinthian_drive
+  - corinthian_drive
 
 price_per_court: 27
 

@@ -17,10 +17,14 @@ PRICE_PER_COURT = 27  # price tier required: Community Member (Peak)
 
 
 def get_court_schedule(
-    session: requests.Session, location: str, user_start_time: str, user_end_time: str
+    session: requests.Session,
+    location: str,
+    date: str,
+    user_start_time: str,
+    user_end_time: str,
 ) -> dict:
     # Fetch request payload
-    url = f"{os.getenv('COURT_SCHEDULE')}{BOOKING_DATE}"
+    url = f"{os.getenv('COURT_SCHEDULE')}{date}"
 
     # Make fetch court availability GET request
     response = session.get(url)
@@ -47,15 +51,15 @@ def get_court_schedule(
                 if user_start_time <= slot["start_time"] < user_end_time
             ]
 
-    print(f"fetch court availability successful ({BOOKING_DATE})")
+    print(f"fetch court availability successful ({date})")
     print(data["1"]["timetable"][0]["start_time"])
     return data
 
 
-def find_court(data: dict) -> dict | None:
+def find_court(data: dict, date: str) -> dict | None:
     booking_info = {
         "booking_id": "",
-        "date": BOOKING_DATE,
+        "date": date,
         "gst": "",
         "subtotal": "",
         "total": "",
