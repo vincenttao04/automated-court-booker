@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.user import login, logout, fetch_user_detail
 from app.booking import book_court, find_court, get_court_schedule, pay_court
@@ -10,11 +10,14 @@ def main():
 
     print("@@@@@@@@@@@@@@@@@@@@@ PRE RUN @@@@@@@@@@@@@@@@@@@@")
     config = load_config()
-    today = datetime.now().strftime("%A").lower()
-    print(today)
+    day = (datetime.now() + timedelta(weeks=3)).strftime("%A").lower()
+    date = (datetime.now() + timedelta(weeks=3)).date()
 
-    schedule = config["schedule"].get(today)
-    print(schedule)
+    print(date)  # temp
+    print(day)  # temp
+
+    schedule = config["schedule"].get(day)
+    print(schedule)  # temp
 
     if schedule:
         user_start_time = schedule.get("start")
@@ -26,8 +29,8 @@ def main():
         if user_end_time is None:
             user_end_time = "23:00"
 
-        print(user_start_time)
-        print(user_end_time)
+        print(user_start_time)  # temp
+        print(user_end_time)  # temp
 
     location = config["locations"][0]
     print(location)
@@ -47,8 +50,10 @@ def main():
     fetch_user_detail(session, "credit_balance")  # balance before booking
 
     start_time = time.perf_counter()
-    schedule = get_court_schedule(session, location, user_start_time, user_end_time)
-    booking_info = find_court(schedule)
+    schedule = get_court_schedule(
+        session, location, date, user_start_time, user_end_time
+    )
+    booking_info = find_court(schedule, date)
 
     print(booking_info)
 
@@ -56,8 +61,8 @@ def main():
     #     try:
     #         user_id, booking_id = book_court(session, booking_info)
     #         pay_court(session, user_id, booking_id)
-    #         schedule = get_court_schedule(session, location, user_start_time, user_end_time)
-    #         booking_info = find_court(schedule)
+    #         schedule = get_court_schedule(session, location, date, user_start_time, user_end_time)
+    #         booking_info = find_court(schedule, date)
     #     except Exception as e:
     #         print(f"Error: {e}")
     #         break
