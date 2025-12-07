@@ -8,12 +8,6 @@ import requests
 from dotenv import load_dotenv
 
 load_dotenv()
-# NZ_TZ = ZoneInfo("Pacific/Auckland")
-# now_nz = datetime.now(NZ_TZ)
-# BOOKING_DATE = now_nz.date() + timedelta(weeks=3)
-
-BOOKING_DATE = "2026-01-27"  # temp, testing purposes only
-PRICE_PER_COURT = 27  # price tier required: Community Member (Peak)
 
 
 def get_court_schedule(
@@ -56,7 +50,7 @@ def get_court_schedule(
     return data
 
 
-def find_court(data: dict, date: str) -> dict | None:
+def find_court(data: dict, date: str, price: int) -> dict | None:
     booking_info = {
         "booking_id": "",
         "date": date,
@@ -102,7 +96,7 @@ def find_court(data: dict, date: str) -> dict | None:
         return None
 
     booking_info["court_name"] = f"Court {booking_info['court_id']}"
-    booking_info["price"] = best_length * PRICE_PER_COURT
+    booking_info["price"] = best_length * price
 
     print(f"\nlongest availability: {best_length} slots/hours")
     print(

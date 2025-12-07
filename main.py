@@ -13,8 +13,9 @@ def main():
     day = (datetime.now() + timedelta(weeks=3)).strftime("%A").lower()
     date = (datetime.now() + timedelta(weeks=3)).date()
 
-    print(date)  # temp
-    print(day)  # temp
+
+    price = config["price_per_court"]
+    print(price)  ## TODO
 
     schedule = config["schedule"].get(day)
     print(schedule)  # temp
@@ -53,7 +54,7 @@ def main():
     schedule = get_court_schedule(
         session, location, date, user_start_time, user_end_time
     )
-    booking_info = find_court(schedule, date)
+    booking_info = find_court(schedule, date, price)
 
     print(booking_info)
 
@@ -62,7 +63,7 @@ def main():
     #         user_id, booking_id = book_court(session, booking_info)
     #         pay_court(session, user_id, booking_id)
     #         schedule = get_court_schedule(session, location, date, user_start_time, user_end_time)
-    #         booking_info = find_court(schedule, date)
+    #         booking_info = find_court(schedule, date, price)
     #     except Exception as e:
     #         print(f"Error: {e}")
     #         break
