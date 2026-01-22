@@ -8,11 +8,31 @@ from config_loader import load_config
 
 def main():
 
+    print("@@@@@@@@@@@@@@@@@@@@@ PRE RUN @@@@@@@@@@@@@@@@@@@@")
     config = load_config()
     today = datetime.now().strftime("%A").lower()
-    schedule = config["schedule"].get(today)
     print(today)
+
+    schedule = config["schedule"].get(today)
     print(schedule)
+
+    if schedule:
+        start_time = schedule.get("start")
+        end_time = schedule.get("end")
+
+        if start_time is None:
+            start_time = "06:00"
+
+        if end_time is None:
+            end_time = "23:00"
+
+        print(start_time)
+        print(end_time)
+
+    location = config["locations"][0]
+    print(location)
+
+    print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     # print("automated court booker !")
 
