@@ -7,36 +7,22 @@ from config_loader import load_config
 
 
 def main():
-
-    print("@@@@@@@@@@@@@@@@@@@@@ PRE RUN @@@@@@@@@@@@@@@@@@@@")
     config = load_config()
-    day = (datetime.now() + timedelta(weeks=3)).strftime("%A").lower()
-    date = (datetime.now() + timedelta(weeks=3)).date()
 
-
-    price = config["price_per_court"]
-    print(price)  ## TODO
-
-    schedule = config["schedule"].get(day)
-    print(schedule)  # temp
-
+    # Fetch user's booking preferences
+    day = (datetime.now() + timedelta(weeks=3)).strftime("%A").lower()  # e.g. 'monday'
+    date = (datetime.now() + timedelta(weeks=3)).date()  # e.g. '2024-07-15'
+    location = config["locations"][0]  # e.g. 'corinthian_drive'
+    price = config["price_per_court"]  # e.g. 27
+    schedule = config["schedule"].get(day)  # e.g. {'start': '18:00', 'end': '20:00'}
     if schedule:
-        user_start_time = schedule.get("start")
-        user_end_time = schedule.get("end")
+        user_start_time = schedule.get("start")  # e.g. '18:00'
+        user_end_time = schedule.get("end")  # e.g. '20:00'
 
         if user_start_time is None:
             user_start_time = "06:00"
-
         if user_end_time is None:
             user_end_time = "23:00"
-
-        print(user_start_time)  # temp
-        print(user_end_time)  # temp
-
-    location = config["locations"][0]
-    print(location)
-
-    print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     print("automated court booker !")
 
