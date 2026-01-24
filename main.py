@@ -1,11 +1,13 @@
+# Standard Library
 import os
-
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from app.user import login, logout, fetch_user_detail
+# Local Application Imports
 from app.booking import book_court, find_court, get_court_schedule, pay_court
+from app.user import fetch_user_detail, login, logout
+
 from config_loader import load_config
 
 
@@ -15,7 +17,7 @@ def main():
     # Fetch user's booking preferences
     now = datetime.now(ZoneInfo("Pacific/Auckland"))
     day = (now + timedelta(weeks=3)).strftime("%A").lower()  # e.g. 'monday'
-    date = (now + timedelta(weeks=3)).date()  # e.g. '2024-07-15'
+    date = (now + timedelta(weeks=3)).date().isoformat()  # e.g. '2024-07-15'
 
     schedule = config["schedule"].get(day)  # e.g. {'start': '18:00', 'end': '20:00'}
     if not schedule:
@@ -29,24 +31,16 @@ def main():
     price = config["price_per_court"]  # e.g. 27
 
     print("automated court booker !")
-
-    start_time = time.perf_counter()
     print("\n_____LOGIN ATTEMPT_____")
     session = login()
-    end_time = time.perf_counter()
-    duration = end_time - start_time
-    print(f"\n[LOGIN] {duration:.6f} seconds")
 
     print("\n_____BOOKING ATTEMPT_____")
     fetch_user_detail(session, "credit_balance")  # balance before booking
 
-    start_time = time.perf_counter()
     schedule = get_court_schedule(
         session, location, date, user_start_time, user_end_time
     )
     booking_info = find_court(schedule, date, price)
-
-    print(booking_info)
 
     while booking_info is not None:
         try:
@@ -59,10 +53,6 @@ def main():
         except Exception as e:
             print(f"Error: {e}")
             break
-
-    end_time = time.perf_counter()
-    duration = end_time - start_time
-    print(f"\n[BOOKING] {duration:.6f} seconds")
 
     print("\n_____BOOKING COMPLETED_____")
     fetch_user_detail(session, "credit_balance")  # balance after booking

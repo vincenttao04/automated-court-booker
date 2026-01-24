@@ -19,3 +19,10 @@ run
 - `python main.py`
 
 change booking preferences using /config.yaml (local dev only)
+
+
+
+| Situation         | Command                                       |
+| ----------------- | --------------------------------------------- |
+| Local development | `pip install -r requirements-dev.txt`         |
+| Lambda build      | `pip install -r requirements.txt -t package/` |

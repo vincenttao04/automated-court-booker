@@ -1,9 +1,11 @@
 # Standard Library
 import os
+import re
 
 # Third-Party Libraries
 import requests
 from dotenv import load_dotenv
+
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -44,8 +46,7 @@ def get_court_schedule(
                 if user_start_time <= slot["start_time"] < user_end_time
             ]
 
-    print(f"fetch court availability successful ({date})")
-    print(data["1"]["timetable"][0]["start_time"])
+    print(f"\nfetch court availability successful ({date})")
     return data
 
 
@@ -97,7 +98,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
     booking_info["court_name"] = f"Court {booking_info['court_id']}"
     booking_info["price"] = best_length * price
 
-    print(f"\nlongest availability: {best_length} slots/hours")
+    print(f"longest availability: {best_length} slots/hours")
     print(
         f"court: {booking_info['court_id']}, starting at {booking_info['start_time']}, ending at {booking_info['end_time']}"
     )
@@ -117,29 +118,42 @@ def book_court(session: requests.Session, booking_info: dict) -> tuple[int | int
     if data.get("status") != "success":
         raise Exception("CREATE BOOKING FAILED")
 
-    print("\n")
-    print(data)
-
     return (
         data["data"]["user_id"],
         data["data"]["id"],
     )  # returns user_id and booking_id as integers
 
 
+# Helper function: extract payment error message from HTML response
+def extract_payment_error(text: str) -> str:
+    if not text:
+        return None
+
+    # Use regex to find the error message within the HTML content
+    match = re.search(
+        r'<div class="text-xl font-bold[^"]*">\s*(.*?)\s*</div>',
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+
+    if match:
+        return " ".join(match.group(1).split())
+
+    return None
+
+
 def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
     # Fetch request payload
     url = f"{os.getenv('PAYMENT_URL')}{user_id}/{booking_id}"
 
-    # Make court payment GET request
+    # Make court payment GET request; Response Content-Type: text/html; charset=UTF-8
     response = session.get(url, timeout=15)
-
-    # Content-Type: text/html; charset=UTF-8
-    print(response.text)
 
     # Check if court payment was successful
     if "Payment Success" not in response.text:
-        raise Exception("COURT PAYMENT FAILED")
+        error_message = extract_payment_error(response.text)
+        raise Exception(error_message or "Unknown payment error")
 
-    print("\ncourt payment successful - check email for confirmation/receipt")
+    print("court payment successful - check email for confirmation/receipt")
 
     return

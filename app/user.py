@@ -3,8 +3,9 @@ import os
 
 # Third-Party Libraries
 import requests
-from requests.adapters import HTTPAdapter
 from dotenv import load_dotenv
+from requests.adapters import HTTPAdapter
+
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -37,6 +38,10 @@ def create_session():
 def login() -> requests.Session:
     # Fetch request payload
     url = os.getenv("LOGIN_URL")
+
+    if not os.getenv("USER_NUMBER") or not os.getenv("USER_PASSWORD"):
+        raise RuntimeError("Missing USER_NUMBER or USER_PASSWORD env variables")
+
     payload = {
         "number": os.getenv("USER_NUMBER"),
         "password": os.getenv("USER_PASSWORD"),
@@ -60,11 +65,6 @@ def login() -> requests.Session:
             "Authorization": f"{data['data'].get('token_type')} {data['data'].get('access_token')}"
         }
     )
-
-    # TEMP: PRINT DEBUG INFO
-    print("\nRate Limit Remaining:", response.headers.get("X-RateLimit-Remaining"))
-    print("Response Status Code:", data.get("code"))
-    print("Response Status:", data.get("status"))
 
     print(f"\n{os.getenv('USER_NUMBER')} login successful")
     return session
