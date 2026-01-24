@@ -37,6 +37,10 @@ def create_session():
 def login() -> requests.Session:
     # Fetch request payload
     url = os.getenv("LOGIN_URL")
+
+    if not os.getenv("USER_NUMBER") or not os.getenv("USER_PASSWORD"):
+        raise RuntimeError("Missing USER_NUMBER or USER_PASSWORD env variables")
+
     payload = {
         "number": os.getenv("USER_NUMBER"),
         "password": os.getenv("USER_PASSWORD"),
