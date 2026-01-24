@@ -3,8 +3,9 @@ import os
 
 # Third-Party Libraries
 import requests
-from requests.adapters import HTTPAdapter
 from dotenv import load_dotenv
+from requests.adapters import HTTPAdapter
+
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()

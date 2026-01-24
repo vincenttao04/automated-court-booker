@@ -1,10 +1,11 @@
 # Standard Library
 import os
+import re
 
 # Third-Party Libraries
 import requests
 from dotenv import load_dotenv
-import re
+
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
