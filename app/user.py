@@ -65,11 +65,6 @@ def login() -> requests.Session:
         }
     )
 
-    # TEMP: PRINT DEBUG INFO
-    print("\nRate Limit Remaining:", response.headers.get("X-RateLimit-Remaining"))
-    print("Response Status Code:", data.get("code"))
-    print("Response Status:", data.get("status"))
-
     print(f"\n{os.getenv('USER_NUMBER')} login successful")
     return session
 
