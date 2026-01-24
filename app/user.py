@@ -1,13 +1,13 @@
 # Standard Library
 import os
-import time
 
 # Third-Party Libraries
 import requests
 from requests.adapters import HTTPAdapter
 from dotenv import load_dotenv
 
-load_dotenv()
+if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+    load_dotenv()
 
 
 def create_session():
@@ -34,7 +34,7 @@ def create_session():
     return session
 
 
-def login() -> None:
+def login() -> requests.Session:
     # Fetch request payload
     url = os.getenv("LOGIN_URL")
     payload = {
@@ -47,7 +47,7 @@ def login() -> None:
     session = create_session()
 
     # Make login POST request
-    response = session.post(url, json=payload)
+    response = session.post(url, json=payload, timeout=15)
     data = response.json()
 
     # Check if login was successful
@@ -57,7 +57,7 @@ def login() -> None:
     # Update session headers with authentication token
     session.headers.update(
         {
-            "Authorization": f"{data["data"].get("token_type")} {data["data"].get("access_token")}"
+            "Authorization": f"{data['data'].get('token_type')} {data['data'].get('access_token')}"
         }
     )
 
@@ -71,16 +71,12 @@ def login() -> None:
 
 
 def logout(session: requests.Session) -> None:
-    # TEMP: DELAY LOGOUT FUNCTION TO SIMULATE SESSION ACTIVITY
-    print("\ntime delay: 10 seconds")
-    time.sleep(10)
-
     # Fetch request payload
     url = os.getenv("LOGOUT_URL")
     payload = {"device_id": "Badminton-Test-ABC-001"}
 
     # Make logout POST request
-    response = session.post(url, json=payload)
+    response = session.post(url, json=payload, timeout=15)
     data = response.json()
 
     # Check if logout was successful
@@ -96,7 +92,7 @@ def fetch_user_detail(session: requests.Session, property: str) -> None:
     url = os.getenv("USER_DATA")
 
     # Make fetch user detail GET request
-    response = session.get(url)
+    response = session.get(url, timeout=15)
     data = response.json()
 
     # Check if fetch user detail was successful
@@ -104,5 +100,5 @@ def fetch_user_detail(session: requests.Session, property: str) -> None:
         raise Exception("FETCH USER DETAIL FAILED")
 
     property_label = property.title().replace("_", " ")
-    print(f"\n{property_label}: {data["data"].get(property)}")
+    print(f"\n{property_label}: {data['data'].get(property)}")
     return

@@ -1,13 +1,12 @@
 # Standard Library
 import os
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
 # Third-Party Libraries
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()
+if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+    load_dotenv()
 
 
 def get_court_schedule(
@@ -21,7 +20,7 @@ def get_court_schedule(
     url = f"{os.getenv('COURT_SCHEDULE')}{date}"
 
     # Make fetch court availability GET request
-    response = session.get(url)
+    response = session.get(url, timeout=15)
     data = response.json()
 
     # Check if fetch court availability was successful
@@ -100,7 +99,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
 
     print(f"\nlongest availability: {best_length} slots/hours")
     print(
-        f"court: {booking_info['court_id']}, starting at {booking_info["start_time"]}, ending at {booking_info["end_time"]}"
+        f"court: {booking_info['court_id']}, starting at {booking_info['start_time']}, ending at {booking_info['end_time']}"
     )
 
     return booking_info
@@ -111,7 +110,7 @@ def book_court(session: requests.Session, booking_info: dict) -> tuple[int | int
     url = os.getenv("BOOKING_URL")
 
     # Make booking_create POST request
-    response = session.post(url, json=booking_info)
+    response = session.post(url, json=booking_info, timeout=15)
     data = response.json()
 
     # Check if booking_create was successful
@@ -132,7 +131,7 @@ def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
     url = f"{os.getenv('PAYMENT_URL')}{user_id}/{booking_id}"
 
     # Make court payment GET request
-    response = session.get(url)
+    response = session.get(url, timeout=15)
 
     # Content-Type: text/html; charset=UTF-8
     print(response.text)
