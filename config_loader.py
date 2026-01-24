@@ -19,7 +19,7 @@ def load_config():
     if config_url:
         try:
             print("loading remote config")
-            response = requests.get(config_url)
+            response = requests.get(config_url, timeout=15)
             response.raise_for_status()  # check if the request was successful
 
             # convert the yaml content from response.text into a python object
