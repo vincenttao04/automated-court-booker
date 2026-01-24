@@ -45,7 +45,6 @@ def get_court_schedule(
             ]
 
     print(f"fetch court availability successful ({date})")
-    print(data["1"]["timetable"][0]["start_time"])
     return data
 
 

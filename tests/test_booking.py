@@ -3,7 +3,11 @@ import time
 
 import pytest
 
-from app.booking import find_court, PRICE_PER_COURT
+from app.booking import find_court
+
+# Testing variables; adjust according to config
+TEST_PRICE = 27
+TEST_DATE = "2024-07-15"
 
 
 @pytest.fixture
@@ -285,61 +289,61 @@ def simulate_booking(test_court_data: dict, result: dict | None) -> None:
 def test_find_court_returns_all_available_sequences(test_court_data):
     start_time = time.perf_counter()
 
-    result = find_court(test_court_data)
+    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == 1
     assert result["court_name"] == "Court 1"
     assert result["start_time"] == "12:00"
     assert result["end_time"] == "16:00"
-    assert result["price"] == PRICE_PER_COURT * 4
+    assert result["price"] == TEST_PRICE * 4
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data)
+    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == 2
     assert result["court_name"] == "Court 2"
     assert result["start_time"] == "07:00"
     assert result["end_time"] == "11:00"
-    assert result["price"] == PRICE_PER_COURT * 4
+    assert result["price"] == TEST_PRICE * 4
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data)
+    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == 3
     assert result["court_name"] == "Court 3"
     assert result["start_time"] == "16:00"
     assert result["end_time"] == "18:00"
-    assert result["price"] == PRICE_PER_COURT * 2
+    assert result["price"] == TEST_PRICE * 2
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data)
+    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == 1
     assert result["court_name"] == "Court 1"
     assert result["start_time"] == "06:00"
     assert result["end_time"] == "07:00"
-    assert result["price"] == PRICE_PER_COURT * 1
+    assert result["price"] == TEST_PRICE * 1
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data)
+    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == 2
     assert result["court_name"] == "Court 2"
     assert result["start_time"] == "18:00"
     assert result["end_time"] == "19:00"
-    assert result["price"] == PRICE_PER_COURT * 1
+    assert result["price"] == TEST_PRICE * 1
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data)
+    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == 3
     assert result["court_name"] == "Court 3"
     assert result["start_time"] == "11:00"
     assert result["end_time"] == "12:00"
-    assert result["price"] == PRICE_PER_COURT * 1
+    assert result["price"] == TEST_PRICE * 1
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data)
+    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is None
 
     end_time = time.perf_counter()
@@ -355,7 +359,7 @@ def test_find_court_returns_none_when_no_availability(test_court_data):
             if slot.get("status") == "Available":
                 slot["status"] = "Booked"
 
-    result = find_court(test_court_data)
+    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is None
 
     end_time = time.perf_counter()
