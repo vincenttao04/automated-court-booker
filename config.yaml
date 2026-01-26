@@ -1,4 +1,5 @@
 # Only 1 location can be active at a time. Comment out the one not in use. If 2 locations are active, the program will fetch the first.
+# This is the preferred fallback location in case the location specified in the schedule is invalid or not provided.
 locations:
   - bond_crescent
   - corinthian_drive
@@ -10,6 +11,8 @@ price_per_court: 27
 # If a day has a start and end time, a booking will be made within that time range.
 # If a day has a start time and no end time, the end time will default to "23:00"
 # If a day has no start time and an end time, the start time will default to "06:00"
+# 3 variables per day: start, end, location
+# Location is not mandatory. If not provided, the location listed in the 'locations' section will be used.
 schedule:
   monday:
     start: "19:00"
@@ -21,12 +24,15 @@ schedule:
   thursday:
     start: "19:00"
     end: "21:00"
+    location: "bond_crescent"
   friday:
     start: "19:00"
     end: "21:00"
   saturday:
     start: "12:00"
     end: "19:00"
+    location: "bond_crescent"
   sunday:
     start: "12:00"
     end: "19:00"
+    location: "bond_crescent"

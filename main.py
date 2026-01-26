@@ -26,8 +26,8 @@ def main():
     else:
         user_start_time = schedule.get("start") or "06:00"
         user_end_time = schedule.get("end") or "23:00"
+        user_location = schedule.get("location") or config["locations"][0]
 
-    location = config["locations"][0]  # e.g. 'corinthian_drive'
     price = config["price_per_court"]  # e.g. 27
 
     print("automated court booker !")
@@ -38,7 +38,7 @@ def main():
     fetch_user_detail(session, "credit_balance")  # balance before booking
 
     schedule = get_court_schedule(
-        session, location, date, user_start_time, user_end_time
+        session, user_location, date, user_start_time, user_end_time
     )
     booking_info = find_court(schedule, date, price)
 
@@ -47,7 +47,7 @@ def main():
             user_id, booking_id = book_court(session, booking_info)
             pay_court(session, user_id, booking_id)
             schedule = get_court_schedule(
-                session, location, date, user_start_time, user_end_time
+                session, user_location, date, user_start_time, user_end_time
             )
             booking_info = find_court(schedule, date, price)
         except Exception as e:
