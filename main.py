@@ -62,6 +62,7 @@ def main():
         time.sleep(10)
 
     logout(session)
+    print("Booking attempt/s completed. Exiting.")
 
 
 if __name__ == "__main__":
