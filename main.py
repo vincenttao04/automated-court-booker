@@ -23,10 +23,10 @@ def main():
     if not schedule:
         print(f"No booking scheduled for {day}. Exiting.")
         return
-    else:
-        user_start_time = schedule.get("start") or "06:00"
-        user_end_time = schedule.get("end") or "23:00"
-        user_location = schedule.get("location") or config["locations"][0]
+    
+    user_start_time = schedule.get("start") or "06:00"
+    user_end_time = schedule.get("end") or "23:00"
+    user_location = schedule.get("location") or config["locations"][0]
 
     price = config["price_per_court"]  # e.g. 27
 
