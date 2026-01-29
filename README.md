@@ -1,11 +1,19 @@
 # Automated Court Booker
 
-A Python automation project that automatically books courts at Badminton North Harbour facilities in Auckland, New Zealand. It searches for the longest contiguous available time slots that match user-defined preferences and completes the full booking and payment process end-to-end.
+A Python automation project that books courts at Badminton North Harbour facilities in Auckland, New Zealand. It searches for the longest contiguous available time slots that match user-defined preferences and completes the full booking and payment process end-to-end.
 
 ## Table of Contents
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
+  - [Core Language](#core-language)
+  - [Key Libraries](#key-libraries)
+  - [Time \& Date Handling](#time--date-handling)
+  - [Testing Framework](#testing-framework)
+  - [Configuration Tools](#configuration-tools)
+  - [Deployment](#deployment)
+  - [Development \& Tooling](#development--tooling)
+  - [Version Control](#version-control)
 - [How It Works](#how-it-works)
   - [Booking Algorithm](#booking-algorithm)
 - [Project Structure](#project-structure)
@@ -18,6 +26,7 @@ A Python automation project that automatically books courts at Badminton North H
 - [Testing](#testing)
 - [AWS Lambda Deployment](#aws-lambda-deployment)
 - [Troubleshooting](#troubleshooting)
+  - [Common Issues](#common-issues)
 - [Limitations](#limitations)
 - [Future Improvements](#future-improvements)
 - [License](#license)
@@ -35,6 +44,45 @@ A Python automation project that automatically books courts at Badminton North H
 - **AWS Lambda Ready**: Structured for deployment on AWS Lambda for autonomous, unattended execution
 - **Credit Balance Tracking**: Retrieves and reports account credit balance before and after bookings
 - **Comprehensive Testing**: Includes a pytest test suite covering core booking and user logic
+
+## Tech Stack
+
+### Core Language
+
+- **Python 3.9+** — Primary language used for automation, scheduling logic, and API interactions
+
+### Key Libraries
+
+- **requests** — Handles HTTP communication with the booking system APIs
+- **PyYAML** — Loads and parses booking preferences from `config.yaml`
+- **python-dotenv** — Manages environment variables for credentials and configuration
+
+### Time & Date Handling
+
+- **zoneinfo (stdlib)** — Ensures correct date calculations using the `Pacific/Auckland` timezone
+
+### Testing Framework
+
+- **pytest** — Test framework used for validating booking and user logic
+
+### Configuration Tools
+
+- **YAML** — Human-readable configuration for schedules, locations, and preferences
+- **Environment Variables** — Secure handling of credentials and deployment settings
+
+### Deployment
+
+- **AWS Lambda** — Serverless execution for autonomous, scheduled bookings
+- **ZIP-based deployment** — Lightweight packaging for Lambda compatibility
+
+### Development & Tooling
+
+- **Virtual environments (venv)** — Dependency isolation for local development
+- **pip** — Python package management
+
+### Version Control
+
+- **Git / GitHub** — Source control and project hosting
 
 ## How It Works
 
@@ -59,45 +107,6 @@ The project uses a sliding-window-style approach to find optimal court slots:
 - Books the entire sequence in a single booking transaction
 - Continues searching for and booking additional suitable slots if available
 - Stops once no further qualifying slots are found
-
-## Tech Stack
-
-### Core Language
-
-- **Python 3.9+** — Primary language used for automation, scheduling logic, and API interactions
-
-### Key Libraries
-
-- **requests** — Handles HTTP communication with the booking system APIs
-- **PyYAML** — Loads and parses booking preferences from `config.yaml`
-- **python-dotenv** — Manages environment variables for credentials and configuration
-
-### Time & Date Handling
-
-- **zoneinfo (stdlib)** — Ensures correct date calculations using the `Pacific/Auckland` timezone
-
-### Testing
-
-- **pytest** — Test framework used for validating booking and user logic
-
-### Configuration
-
-- **YAML** — Human-readable configuration for schedules, locations, and preferences
-- **Environment Variables** — Secure handling of credentials and deployment settings
-
-### Deployment
-
-- **AWS Lambda** — Serverless execution for autonomous, scheduled bookings
-- **ZIP-based deployment** — Lightweight packaging for Lambda compatibility
-
-### Development & Tooling
-
-- **Virtual environments (venv)** — Dependency isolation for local development
-- **pip** — Python package management
-
-### Version Control
-
-- **Git / GitHub** — Source control and project hosting
 
 ## Project Structure
 
@@ -295,10 +304,10 @@ python -m pytest tests/test_booking.py -v
 ## Limitations
 
 - **Booking window constraints**: The application can only book courts within the venue’s allowed advance booking window (up to three weeks ahead). This is an external limitation.
-- **Sequential execution**: Court availability is checked and booked sequentially. The application does not perform parallel booking attempts. This is to avoid double bookings.
+- **Sequential execution**: Court availability is checked and booked sequentially to avoid double bookings. The application does not perform parallel booking attempts.
 - **No retry or backoff logic**: If a booking, availability fetch, or payment step fails, the process exits without automatic retries.
 - **Dependency on external system availability**: Successful booking depends on the stability and responsiveness of the Badminton North Harbour booking system. This is an external limitation.
-- **Limited error recovery**: Partial failures (such as payment issues after booking) may require manual review through the confirmation email.
+- **Limited error recovery**: Partial failures (such as payment issues after booking) may require manual review via the confirmation email.
 
 ## Future Improvements
 
