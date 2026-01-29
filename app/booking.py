@@ -58,7 +58,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
         "subtotal": "",
         "total": "",
         "user_id": "",
-        # remaining values to be filled in this function
+        # Remaining values to be filled in this function
         "court_id": None,
         "court_name": "",
         "start_time": "",
