@@ -24,9 +24,19 @@ A Python automation project that books courts at Badminton North Harbour facilit
   - [config.yaml Options](#configyaml-options)
   - [Environment Variables](#environment-variables)
 - [Testing](#testing)
-- [AWS Lambda Deployment](#aws-lambda-deployment)
+- [AWS Deployment - Lambda \& EventBridge](#aws-deployment---lambda--eventbridge)
+  - [1. Packaging the Lambda Application](#1-packaging-the-lambda-application)
+    - [Build the deployment package](#build-the-deployment-package)
+    - [What the scripts do:](#what-the-scripts-do)
+  - [2. Uploading to AWS Lambda](#2-uploading-to-aws-lambda)
+  - [3. Environment Variables](#3-environment-variables)
+  - [4. Scheduling the Lambda Execution](#4-scheduling-the-lambda-execution)
+    - [Scheduler Configuration](#scheduler-configuration)
+  - [5. Verifying the Deployment](#5-verifying-the-deployment)
+  - [6. Cost and Free Tier Usage](#6-cost-and-free-tier-usage)
 - [Troubleshooting](#troubleshooting)
   - [Common Issues](#common-issues)
+  - [AWS Deployment](#aws-deployment)
 - [Limitations](#limitations)
 - [Future Improvements](#future-improvements)
 - [License](#license)
@@ -41,7 +51,7 @@ A Python automation project that books courts at Badminton North Harbour facilit
 - **Multi-Location Support**: Supports booking at both Bond Crescent and Corinthian Drive facilities
 - **Flexible Time Preferences**: Define custom start and end time constraints for each day of the week
 - **Automated Payment**: Completes court payments automatically using account credit
-- **AWS Lambda Ready**: Structured for deployment on AWS Lambda for autonomous, unattended execution
+- **Deployment Ready**: Structured for deployment on AWS Lambda and Amazon EventBridge for autonomous, unattended execution
 - **Credit Balance Tracking**: Retrieves and reports account credit balance before and after bookings
 - **Comprehensive Testing**: Includes a pytest test suite covering core booking and user logic
 
@@ -72,7 +82,7 @@ A Python automation project that books courts at Badminton North Harbour facilit
 
 ### Deployment
 
-- **AWS Lambda** — Serverless execution for autonomous, scheduled bookings
+- **AWS Lambda & Amazon EventBridge** — Serverless execution for autonomous, scheduled bookings
 - **ZIP-based deployment** — Lightweight packaging for Lambda compatibility
 
 ### Development & Tooling
@@ -271,9 +281,206 @@ python -m pytest -v -s
 python -m pytest tests/test_booking.py -v
 ```
 
-## AWS Lambda Deployment
+## AWS Deployment - Lambda & EventBridge
 
-(coming soon)
+This project is deployed as a scheduled AWS Lambda function that runs automatically using Amazon EventBridge Scheduler. The deployment uses a ZIP-based Lambda package built locally and uploaded to AWS.
+
+### 1. Packaging the Lambda Application
+
+AWS Lambda runs on a Linux environment, so the deployment ZIP must be created with proper structure. Two build scripts are provided to create the Lambda deployment package (`build-lambda.sh`, `build-lambda.ps1`) - choose the one that matches your environment.
+
+#### Build the deployment package
+
+**Option A: Using Bash - `build-lambda.sh`**
+
+**Requirements:**
+
+- Python + pip available on PATH
+- `zip` command installed
+- Bash shell (Git Bash on Windows, native on macOS/Linux)
+
+From the project root (the directory containing `handler.py`):
+
+```bash
+# Make script executable (one-time, macOS/Linux only)
+chmod +x build-lambda.sh
+
+# Run the build script
+./build-lambda.sh
+```
+
+**Option B: Using PowerShell - `build-lambda.ps1`**
+
+**Requirements:**
+
+- Python + pip available on PATH
+- PowerShell 5.1+ (Windows) or PowerShell 7+ (pwsh on any platform)
+
+From the project root:
+
+```powershell
+# Windows PowerShell 5.1
+powershell -ExecutionPolicy Bypass -File build-lambda.ps1
+
+# OR PowerShell 7+ (pwsh) - Windows
+pwsh build-lambda.ps1
+
+# OR PowerShell 7+ (pwsh) - macOS/Linux
+chmod +x build-lambda.ps1  # Make script executable (one-time only)
+./build-lambda.ps1
+```
+
+#### What the scripts do:
+
+Both scripts perform the same operations:
+
+1. Clean old artifacts (removes existing `package/` directory and `lambda.zip`)
+2. Create a fresh `package/` directory
+3. Install Python dependencies from `requirements.txt` into `package/`
+4. Copy project files (`app/`, `main.py`, `handler.py`, `config_loader.py`, `config.yaml`) to `package/`
+5. Remove `__pycache__` folders and `bin/` directory (reduces ZIP size)
+6. Create `lambda.zip` with the packaged application
+
+After running either script, `lambda.zip` will be created in the project root and is ready to upload to AWS Lambda.
+
+### 2. Uploading to AWS Lambda
+
+1. **Create a new AWS Lambda function**
+2. **Choose the following settings:**
+   - Runtime: Python 3.14 or higher
+   - Architecture: `arm64`
+3. **Upload the generated `lambda.zip`**
+4. **Set the handler:**
+   ```
+   handler.lambda_handler
+   ```
+5. **Configure resources:**
+   - Memory: 512 MB
+   - Timeout: 30–60 seconds
+
+This project uses ZIP-based deployment. Inline code edits in the AWS console may not save and deploy correctly.
+
+### 3. Environment Variables
+
+In production, the Lambda function does not use the `.env` file. The `.env` file is used only for local development. All secrets and endpoints must be provided via AWS Lambda Environment Variables.
+
+Configure the following environment variables in:
+
+```
+Lambda → Configuration → Environment variables
+```
+
+**Required variables:**
+Do not include quotes or comments in AWS environment variable values.
+
+```
+USER_NUMBER
+USER_PASSWORD
+LOGIN_URL
+LOGOUT_URL
+USER_DATA
+COURT_SCHEDULE
+BOOKING_URL
+PAYMENT_URL
+```
+
+**Optional variables:**
+
+```
+CONFIG_URL  # S3 URL for hosted config.yaml (if using remote config)
+```
+
+### 4. Scheduling the Lambda Execution
+
+The Lambda function is triggered automatically using **Amazon EventBridge Scheduler**.
+
+#### Scheduler Configuration
+
+1. Navigate to **Amazon EventBridge → Schedules**
+2. Click **Create schedule**
+3. Configure the schedule:
+   - **Schedule name**: `automated-court-booker` (or your preferred name)
+   - **Schedule type**: Recurring schedule
+   - **Cron expression:**
+     ```
+     cron(0 0 * * ? *)
+     ```
+     _(Runs once per day at midnight)_
+   - **Time zone**: Select your local time zone (e.g., `Pacific/Auckland` for New Zealand)
+   - **Flexible time window**: Disabled
+
+4. **Select target:**
+   - **Target API**: AWS Lambda Invoke
+   - **Lambda function**: Select the deployed AWS Lambda function
+   - **Input**: Empty JSON object `{}`
+
+5. **Review and create**
+
+This configuration triggers the Lambda once per day at midnight (local time). Daylight saving time is handled automatically by EventBridge.
+
+### 5. Verifying the Deployment
+
+To verify the deployment:
+
+**Option 1: Create a test schedule**
+
+1. Create a temporary one-time schedule in EventBridge
+2. Set it to trigger within a few minutes
+3. Monitor CloudWatch Logs for execution
+
+**Option 2: Use Lambda Test feature**
+
+1. Navigate to your Lambda function in the AWS Console
+2. Go to the **Test** tab
+3. Create a new test event with an empty payload:
+   ```json
+   {}
+   ```
+4. Click **Test**
+
+**Check CloudWatch Logs** for:
+
+- Successful execution
+- Correct New Zealand timestamps
+- Expected output messages
+
+**Expected output on a booking day:**
+
+```
+automated court booker !
+
+_____LOGIN ATTEMPT_____
+loading remote config
+
+123456 login successful
+
+_____BOOKING ATTEMPT_____
+
+Credit Balance: 108
+
+fetch court availability successful (2025-02-19)
+longest availability: 2 slots/hours
+court: 3, starting at 19:00, ending at 21:00
+court payment successful - check email for confirmation/receipt
+...
+```
+
+### 6. Cost and Free Tier Usage
+
+This project runs well within AWS free tier limits:
+
+- **AWS Lambda**: 1 invocation per day
+- **EventBridge Scheduler**: 1 scheduled trigger per day
+- **Execution time**: ~1–3 seconds per run
+- **CloudWatch Logs**: Minimal log storage
+
+**Monthly estimates (assuming 1 execution per day):**
+
+- Lambda invocations: ~30/month (Free tier: 1M requests/month)
+- Compute time: ~90 seconds/month (Free tier: 400,000 GB-seconds/month)
+- EventBridge rules: 1 rule (Free tier: Always free for rules)
+
+Under normal usage, the deployment should incur no AWS charges and stay well within the free tier.
 
 ## Troubleshooting
 
@@ -300,6 +507,30 @@ python -m pytest tests/test_booking.py -v
 
 - Insufficient credit balance
 - Payment processing error (check email for details)
+
+### AWS Deployment
+
+**Issue: "No module named 'app'" error**
+
+- Ensure `lambda.zip` was created using the custom PowerShell or GitBash scripts provided (`build-lambda.ps1`, `build-lambda.sh`)
+- Verify the ZIP contains the `app/` directory at the root level
+
+**Issue: Environment variables not working**
+
+- Check for quotes or extra whitespace in values
+- Ensure variable names match exactly (case-sensitive)
+
+**Issue: Scheduler not triggering**
+
+- Verify the EventBridge schedule is in "Enabled" state
+- Check the time zone matches your location
+- Review EventBridge execution history
+
+**Issue: Timeout errors**
+
+- Increase Lambda timeout to 60 seconds
+- Check internet connectivity from Lambda VPC (if using VPC)
+- Verify API endpoints are accessible from AWS region
 
 ## Limitations
 
