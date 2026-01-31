@@ -27,7 +27,7 @@ A Python automation project that books courts at Badminton North Harbour facilit
 - [AWS Deployment - Lambda \& EventBridge](#aws-deployment---lambda--eventbridge)
   - [1. Packaging the Lambda Application](#1-packaging-the-lambda-application)
     - [Build the deployment package](#build-the-deployment-package)
-    - [What the scripts do:](#what-the-scripts-do)
+    - [What the scripts do](#what-the-scripts-do)
   - [2. Uploading to AWS Lambda](#2-uploading-to-aws-lambda)
   - [3. Environment Variables](#3-environment-variables)
   - [4. Scheduling the Lambda Execution](#4-scheduling-the-lambda-execution)
@@ -59,7 +59,7 @@ A Python automation project that books courts at Badminton North Harbour facilit
 
 ### Core Language
 
-- **Python 3.9+** — Primary language used for automation, scheduling logic, and API interactions
+- **Python 3.14+** — Primary language used for automation, scheduling logic, and API interactions
 
 ### Key Libraries
 
@@ -149,7 +149,7 @@ automated-court-booker/
 
 ### Prerequisites
 
-- Python 3.9 or higher
+- Python 3.14 or higher
 - pip package manager
 - Valid Badminton North Harbour account credentials
 
@@ -196,8 +196,8 @@ automated-court-booker/
 
    ```env
    ## Login Credentials
-   USER_NUMBER = "your_user_number"
-   USER_PASSWORD = "your_user_password"
+   USER_NUMBER="your_user_number"
+   USER_PASSWORD="your_user_password"
 
    ## API Endpoints (already configured)
 
@@ -301,7 +301,7 @@ AWS Lambda runs on a Linux environment, so the deployment ZIP must be created wi
 - `zip` command installed
 - Bash shell (Git Bash on Windows, native on macOS/Linux)
 
-From the project root (the directory containing `handler.py`):
+From the project root:
 
 ```bash
 # Make script executable (one-time, macOS/Linux only)
@@ -332,7 +332,7 @@ chmod +x build-lambda.ps1  # Make script executable (one-time only)
 ./build-lambda.ps1
 ```
 
-#### What the scripts do:
+#### What the scripts do
 
 Both scripts perform the same operations:
 
