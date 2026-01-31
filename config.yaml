@@ -21,7 +21,9 @@ schedule:
     end: "21:00"
   thursday: null
   friday: null
-  saturday: null
+  saturday:
+    start: "11:00"
+    end: "12:00"
   sunday:
     start: "12:00"
     end: "19:00"
