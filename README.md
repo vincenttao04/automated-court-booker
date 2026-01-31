@@ -131,6 +131,8 @@ automated-court-booker/
 │   ├── test_booking.py      # Booking logic tests
 │   └── test_user.py         # User logic tests
 │
+├── build-lambda.ps1         # PowerShell script to build the Lambda deployment package
+├── build-lambda.sh          # Bash script to build the Lambda deployment package
 ├── config.yaml              # Booking preferences (local dev)
 ├── config_loader.py         # YAML config loader
 ├── handler.py               # AWS Lambda entry point
