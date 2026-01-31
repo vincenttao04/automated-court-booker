@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# Build AWS Lambda deployment package
+# Build AWS Lambda deployment package (PowerShell)
 #
 # Windows (Windows PowerShell 5.1):
 #   powershell -ExecutionPolicy Bypass -File build-lambda.ps1
