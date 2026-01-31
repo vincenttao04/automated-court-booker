@@ -23,7 +23,7 @@ def main():
     if not schedule:
         print(f"No booking scheduled for {day}. Exiting.")
         return
-    
+
     user_start_time = schedule.get("start") or "06:00"
     user_end_time = schedule.get("end") or "23:00"
     user_location = schedule.get("location") or config["locations"][0]
@@ -33,6 +33,10 @@ def main():
     print("automated court booker !")
     print("\n_____LOGIN ATTEMPT_____")
     session = login()
+
+    print(
+        f"[DEBUG] reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
+    )
 
     print("\n_____BOOKING ATTEMPT_____")
     fetch_user_detail(session, "credit_balance")  # balance before booking
@@ -59,6 +63,7 @@ def main():
 
     print("\n_____LOGOUT ATTEMPT_____")
     if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+        print("Waiting 10 seconds before logout...")
         time.sleep(10)
 
     logout(session)
