@@ -12,7 +12,7 @@ from app.user import fetch_user_detail, login, logout
 from config_loader import load_config
 
 NZ_TZ = ZoneInfo("Pacific/Auckland")  # set NZ timezone
-TARGET_TIME = "01:52:00"  # set target time to run the booking script
+TARGET_TIME = "00:00:00"  # set target time to run the booking script
 
 
 def wait_until(target_time_str=TARGET_TIME) -> None:
@@ -37,7 +37,7 @@ def wait_until(target_time_str=TARGET_TIME) -> None:
         sys.exit(f"Wait time exceeds 61 seconds ({run_at}). Exiting.")
 
     print("[DEBUG] Time until project runs: ", str(wait_time))
-    time.sleep(wait_time.total_seconds())
+    time.sleep(wait_time.total_seconds())  # sleep until the target time
 
     return
 
