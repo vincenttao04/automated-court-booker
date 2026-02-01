@@ -11,6 +11,19 @@ from app.user import fetch_user_detail, login, logout
 from config_loader import load_config
 
 
+def wait_until() -> None:
+    target_time = datetime.strptime("00:00:00", "%H:%M:%S").time()
+
+    now = datetime.now(ZoneInfo("Pacific/Auckland"))
+    run_at = datetime.combine(
+        now.date(), target_time, tzinfo=ZoneInfo("Pacific/Auckland")
+    )
+
+    time.sleep((run_at - now).total_seconds())
+
+    return
+
+
 def main():
     config = load_config()
 
