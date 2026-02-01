@@ -14,7 +14,9 @@ price_per_court: 27
 # 3 variables per day: start, end, location
 # Location is not mandatory. If not provided, the location listed in the 'locations' section will be used.
 schedule:
-  monday: null
+  monday:
+    start: "19:00"
+    end: "21:00"
   tuesday: null
   wednesday:
     start: "19:00"

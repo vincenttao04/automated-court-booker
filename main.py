@@ -11,14 +11,21 @@ from app.user import fetch_user_detail, login, logout
 from config_loader import load_config
 
 
-def wait_until() -> None:
-    target_time = datetime.strptime("00:00:00", "%H:%M:%S").time()
+def wait_until(target_time: str) -> None:
+    # Convert string into datetime object
+    target_time = datetime.strptime(target_time, "%H:%M:%S").time()
+    print("Target time: ", target_time)
 
     now = datetime.now(ZoneInfo("Pacific/Auckland"))
+    print("Now time: ", now)
+
     run_at = datetime.combine(
         now.date(), target_time, tzinfo=ZoneInfo("Pacific/Auckland")
     )
+    print("Run At time: ", run_at)
 
+    seconds = run_at - now
+    print("Time until project runs: ", str(seconds))
     time.sleep((run_at - now).total_seconds())
 
     return
@@ -48,7 +55,13 @@ def main():
     session = login()
 
     print(
-        f"[DEBUG] reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
+        f"[1. DEBUG] reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
+    )
+
+    wait_until("00:47:00")
+
+    print(
+        f"[2. DEBUG] reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
     )
 
     print("\n_____BOOKING ATTEMPT_____")
