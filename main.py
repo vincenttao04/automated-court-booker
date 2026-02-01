@@ -1,5 +1,6 @@
 # Standard Library
 import os
+import sys
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -19,9 +20,18 @@ def wait_until(target_time: str) -> None:
     now = datetime.now(ZoneInfo("Pacific/Auckland"))
     print("Now time: ", now)
 
+    # Calculate next occurrence of target time
     run_at = datetime.combine(
-        now.date(), target_time, tzinfo=ZoneInfo("Pacific/Auckland")
+        now.date(),
+        target_time,
+        tzinfo=ZoneInfo("Pacific/Auckland"),
     )
+    print("Run At time: ", run_at)
+
+    # If the target time has already passed today, schedule for tomorrow
+    if run_at <= now:
+        run_at += timedelta(days=1)
+
     print("Run At time: ", run_at)
 
     seconds = run_at - now
@@ -58,7 +68,7 @@ def main():
         f"[1. DEBUG] reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
     )
 
-    wait_until("00:47:00")
+    wait_until("01:47:00")
 
     print(
         f"[2. DEBUG] reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
