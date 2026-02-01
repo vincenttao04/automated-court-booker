@@ -20,7 +20,7 @@ def wait_until(target_time: str) -> None:
     now = datetime.now(ZoneInfo("Pacific/Auckland"))
     print("Now time: ", now)
 
-    # Calculate next occurrence of target time
+    # Combine current date with target time
     run_at = datetime.combine(
         now.date(),
         target_time,
@@ -31,6 +31,10 @@ def wait_until(target_time: str) -> None:
     # If the target time has already passed today, schedule for tomorrow
     if run_at <= now:
         run_at += timedelta(days=1)
+
+    # If the wait time is more than 2 minutes, exit
+    if run_at - now > timedelta(minutes=2):
+        sys.exit("Wait time exceeds 2 minutes. Exiting.")
 
     print("Run At time: ", run_at)
 
