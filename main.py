@@ -11,20 +11,23 @@ from app.user import fetch_user_detail, login, logout
 
 from config_loader import load_config
 
+NZ_TZ = ZoneInfo("Pacific/Auckland")  # set NZ timezone
+TARGET_TIME = "00:00:00"  # set target time to run the booking script
 
-def wait_until(target_time: str) -> None:
+
+def wait_until(target_time_str=TARGET_TIME) -> None:
     # Convert string into datetime object
-    target_time = datetime.strptime(target_time, "%H:%M:%S").time()
+    target_time = datetime.strptime(target_time_str, "%H:%M:%S").time()
     print("Target time: ", target_time)
 
-    now = datetime.now(ZoneInfo("Pacific/Auckland"))
+    now = datetime.now(NZ_TZ)
     print("Now time: ", now)
 
     # Combine current date with target time
     run_at = datetime.combine(
         now.date(),
         target_time,
-        tzinfo=ZoneInfo("Pacific/Auckland"),
+        tzinfo=NZ_TZ,
     )
     print("Run At time: ", run_at)
 
@@ -32,15 +35,15 @@ def wait_until(target_time: str) -> None:
     if run_at <= now:
         run_at += timedelta(days=1)
 
-    # If the wait time is more than 2 minutes, exit
-    if run_at - now > timedelta(minutes=2):
-        sys.exit("Wait time exceeds 2 minutes. Exiting.")
+    # If the wait time is more than 61 seconds, exit
+    wait_time = run_at - now
+    if wait_time > timedelta(seconds=61):
+        sys.exit("Wait time exceeds 61 seconds. Exiting.")
 
     print("Run At time: ", run_at)
 
-    seconds = run_at - now
-    print("Time until project runs: ", str(seconds))
-    time.sleep((run_at - now).total_seconds())
+    print("[DEBUG] Time until project runs: ", str(wait_time))
+    time.sleep(wait_time.total_seconds())
 
     return
 
@@ -49,7 +52,7 @@ def main():
     config = load_config()
 
     # Fetch user's booking preferences
-    now = datetime.now(ZoneInfo("Pacific/Auckland"))
+    now = datetime.now(NZ_TZ)
     day = (now + timedelta(weeks=3)).strftime("%A").lower()  # e.g. 'monday'
     date = (now + timedelta(weeks=3)).date().isoformat()  # e.g. '2024-07-15'
 
@@ -72,13 +75,14 @@ def main():
         f"[1. DEBUG] reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
     )
 
-    wait_until("01:47:00")
+    wait_until(TARGET_TIME)
 
     print(
         f"[2. DEBUG] reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
     )
 
     print("\n_____BOOKING ATTEMPT_____")
+    # Future version: consider removing - it is extra overhead
     fetch_user_detail(session, "credit_balance")  # balance before booking
 
     schedule = get_court_schedule(
@@ -99,6 +103,7 @@ def main():
             break
 
     print("\n_____BOOKING COMPLETED_____")
+    # Future version: consider removing - it is extra overhead
     fetch_user_detail(session, "credit_balance")  # balance after booking
 
     print("\n_____LOGOUT ATTEMPT_____")
