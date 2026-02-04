@@ -567,11 +567,13 @@ Under normal usage, the deployment should incur no AWS charges and stay well wit
 1. **Web dashboard**: Create a UI for managing preferences and viewing booking history
 2. **Better error handling**: More granular error messages and retry logic
 3. Add output screenshots for each scenario (no credit, no courts, successful booking)
-4. Update value of lambda timeout setting after coding update
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+© 2026 Vincent Tao. All rights reserved.
+
+This repository is made public for portfolio and educational viewing only.
+No permission is granted to use, copy, modify, or distribute this code.
 
 ## Author
 
