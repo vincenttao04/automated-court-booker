@@ -16,6 +16,8 @@ A Python automation project that books courts at Badminton North Harbour facilit
   - [Version Control](#version-control)
 - [How It Works](#how-it-works)
   - [Booking Algorithm](#booking-algorithm)
+  - [Local Execution Flow](#local-execution-flow)
+  - [AWS Lambda Execution Flow](#aws-lambda-execution-flow)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
@@ -96,18 +98,6 @@ A Python automation project that books courts at Badminton North Harbour facilit
 
 ## How It Works
 
-1. **Date Calculation**: Determines the booking date up to three weeks in advance using the Pacific/Auckland timezone
-2. **Config Loading**: Loads booking preferences from `config.yaml` (or a remote URL if configured)
-3. **Schedule Check**: Checks whether booking is enabled for the calculated day of the week
-4. **Authentication**: Logs in and establishes an authenticated session
-5. **Availability Fetch**: Retrieves court availability for the target date and location
-6. **Slot Finding**: Identifies the longest contiguous available time slot within user-defined start and end times
-7. **Booking Loop**: Books all available slots that meet the criteria
-8. **Payment**: Automatically completes payment using account credit
-9. **Repeat**: Repeats availability checking and booking until no suitable courts remain
-10. **Confirmation**: Displays the updated account credit balance
-11. **Cleanup**: Logs out and closes the session
-
 ### Booking Algorithm
 
 The project uses a sliding-window-style approach to find optimal court slots:
@@ -117,6 +107,34 @@ The project uses a sliding-window-style approach to find optimal court slots:
 - Books the entire sequence in a single booking transaction
 - Continues searching for and booking additional suitable slots if available
 - Stops once no further qualifying slots are found
+
+### Local Execution Flow
+
+1. **Date Calculation**: Determines the booking date up to three weeks in advance using the Pacific/Auckland timezone
+2. **Config Loading**: Loads booking preferences from `config.yaml` (or a remote URL if configured)
+3. **Schedule Check**: Checks whether booking is enabled for the calculated day of the week
+4. **Authentication**: Logs in and establishes an authenticated session
+5. **Availability Fetch**: Retrieves court availability for the target date and location
+6. **Slot Finding**: Identifies the longest contiguous available time slot within user-defined start and end times ([Booking Algorithm](#booking-algorithm))
+7. **Booking Loop**: Books all available slots that meet the criteria
+8. **Payment**: Automatically completes payment using account credit
+9. **Repeat**: Repeats availability checking and booking until no suitable courts remain
+10. **Confirmation**: Displays the updated account credit balance
+11. **Cleanup**: Logs out and closes the session
+
+### AWS Lambda Execution Flow
+
+When deployed to AWS Lambda, the execution follows this automated workflow:
+
+1. **EventBridge Scheduler Trigger**: Amazon EventBridge triggers the Lambda function at the designated time (e.g., 23:59 NZ time)
+2. **Lambda Invocation**: With the codebase uploaded to AWS Lambda, Lambda starts the function
+3. **Environment Setup**: Lambda initialises the Python runtime and loads environment variables
+4. **Handler Execution**: The `handler.lambda_handler` function is called, which invokes `main()`
+5. **Main Function Runs**: Executes the complete booking workflow (steps 1-11 from [Local Execution Flow](#local-execution-flow))
+6. **Function Termination**: Lambda function completes and returns status code
+7. **Logs Saved**: Execution logs are automatically saved to CloudWatch Logs for monitoring
+
+This automated process runs once per day without any manual intervention.
 
 ## Project Structure
 
@@ -405,11 +423,13 @@ The Lambda function is triggered automatically using **Amazon EventBridge Schedu
    - **Schedule type**: Recurring schedule
    - **Cron expression:**
      ```
-     cron(0 0 * * ? *)
+     cron(59 23 * * ? *)
      ```
-     _(Runs once per day at midnight)_
+     _(Runs once per day at 23:59)_
    - **Time zone**: Select your local time zone (e.g., `Pacific/Auckland` for New Zealand)
    - **Flexible time window**: Disabled
+
+   Note: Amazon EventBridge cannot guarantee execution exactly at the start of a minute and may trigger with a small delay. For this reason, the schedule is set to 23:59 instead of 00:00. The AWS Lambda function includes logic to wait until 00:00, at which point the core booking logic is executed.
 
 4. **Select target:**
    - **Target API**: AWS Lambda Invoke

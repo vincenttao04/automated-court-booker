@@ -1,5 +1,6 @@
 # Standard Library
 import os
+import sys
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -10,12 +11,42 @@ from app.user import fetch_user_detail, login, logout
 
 from config_loader import load_config
 
+NZ_TZ = ZoneInfo("Pacific/Auckland")  # set NZ timezone
+TARGET_TIME = "00:00:00"  # set target time to run the booking script
+
+
+def wait_until(target_time_str=TARGET_TIME) -> None:
+    # Convert string into datetime object
+    target_time = datetime.strptime(target_time_str, "%H:%M:%S").time()
+    now = datetime.now(NZ_TZ)
+
+    # Combine current date with target time
+    run_at = datetime.combine(
+        now.date(),
+        target_time,
+        tzinfo=NZ_TZ,
+    )
+
+    # If the target time has already passed today, schedule for tomorrow
+    if run_at <= now:
+        run_at += timedelta(days=1)
+
+    # If the wait time is more than 61 seconds, exit
+    wait_time = run_at - now
+    if wait_time > timedelta(seconds=61):
+        sys.exit(f"Wait time exceeds 61 seconds ({run_at}). Exiting.")
+
+    print("[DEBUG] Time until project runs: ", str(wait_time))
+    time.sleep(wait_time.total_seconds())  # sleep until the target time
+
+    return
+
 
 def main():
     config = load_config()
 
     # Fetch user's booking preferences
-    now = datetime.now(ZoneInfo("Pacific/Auckland"))
+    now = datetime.now(NZ_TZ)
     day = (now + timedelta(weeks=3)).strftime("%A").lower()  # e.g. 'monday'
     date = (now + timedelta(weeks=3)).date().isoformat()  # e.g. '2024-07-15'
 
@@ -35,11 +66,18 @@ def main():
     session = login()
 
     print(
-        f"[DEBUG] reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
+        f"[DEBUG] login reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
     )
 
     print("\n_____BOOKING ATTEMPT_____")
+    # Future version: consider removing - it is extra overhead
     fetch_user_detail(session, "credit_balance")  # balance before booking
+
+    wait_until(TARGET_TIME)
+
+    print(
+        f"[DEBUG] booking reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
+    )
 
     schedule = get_court_schedule(
         session, user_location, date, user_start_time, user_end_time
@@ -59,6 +97,7 @@ def main():
             break
 
     print("\n_____BOOKING COMPLETED_____")
+    # Future version: consider removing - it is extra overhead
     fetch_user_detail(session, "credit_balance")  # balance after booking
 
     print("\n_____LOGOUT ATTEMPT_____")
