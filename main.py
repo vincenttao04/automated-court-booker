@@ -46,7 +46,9 @@ def main():
     config = load_config()
 
     # Fetch user's booking preferences
-    now = datetime.now(NZ_TZ)
+    now = datetime.now(NZ_TZ) + timedelta(
+        days=1
+    )  # booking for the next day due to the wait_until function
     day = (now + timedelta(weeks=3)).strftime("%A").lower()  # e.g. 'monday'
     date = (now + timedelta(weeks=3)).date().isoformat()  # e.g. '2024-07-15'
 
