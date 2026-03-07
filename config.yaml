@@ -20,11 +20,14 @@ schedule:
     start: "19:00"
     end: "21:00"
   thursday: null
-  friday: null
+  friday:
+    start: "16:00"
+    end: "18:00"
+    location: "corinthian_drive"
   saturday:
-    start: "12:00"
-    end: "17:00"
-  sunday:
-    start: "12:00"
+    start: "09:00"
     end: "19:00"
-    location: "bond_crescent"
+    location: "corinthian_drive"
+  sunday:
+    start: "10:00"
+    end: "19:00"

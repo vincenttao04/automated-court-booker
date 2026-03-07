@@ -70,6 +70,9 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
     for court_number, court_info in data.items():
         current_length = 0
         current_start = None
+        court_name = court_info["court"][
+            "name"
+        ]  # note court_id and court_name mistmatch for corinthian_drive
 
         for slot in court_info["timetable"]:
             if slot["status"] == "Available":
@@ -81,6 +84,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
                     booking_info.update(
                         {
                             "court_id": int(court_number),
+                            "court_name": court_name,
                             "start_time": current_start,
                             "end_time": slot["end_time"],
                         }
@@ -95,12 +99,11 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
         print("\nno available courts found")
         return None
 
-    booking_info["court_name"] = f"Court {booking_info['court_id']}"
     booking_info["price"] = best_length * price
 
     print(f"longest availability: {best_length} slots/hours")
     print(
-        f"court: {booking_info['court_id']}, starting at {booking_info['start_time']}, ending at {booking_info['end_time']}"
+        f"{booking_info['court_name'].lower()}, starting at {booking_info['start_time']}, ending at {booking_info['end_time']}"
     )
 
     return booking_info
