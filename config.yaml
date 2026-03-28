@@ -31,3 +31,4 @@ schedule:
   sunday:
     start: "10:00"
     end: "19:00"
+    location: "corinthian_drive"
