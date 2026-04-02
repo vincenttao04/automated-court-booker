@@ -170,6 +170,9 @@ automated-court-booker/
 - Python 3.14 or higher
 - pip package manager
 - Valid Badminton North Harbour account credentials
+- Recommended VS Code extensions:
+  - Python
+  - Black Formatter
 
 ### Local Development Setup
 

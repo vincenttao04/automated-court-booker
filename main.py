@@ -11,6 +11,10 @@ from app.user import fetch_user_detail, login, logout
 
 from config_loader import load_config
 
+# temp
+import requests
+
+
 NZ_TZ = ZoneInfo("Pacific/Auckland")  # set NZ timezone
 TARGET_TIME = "00:00:00"  # set target time to run the booking script
 
@@ -64,6 +68,16 @@ def main():
     price = config["price_per_court"]  # e.g. 27
 
     print("automated court booker !")
+    # temp placement of new pre-fetch. TODO: tidy main file.
+    public_session = requests.Session()
+    public_schedule = get_court_schedule(
+        public_session, user_location, date, user_start_time, user_end_time
+    )
+    print(
+        f"[DEBUG] public fetch reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
+    )
+    # temp end
+
     print("\n_____LOGIN ATTEMPT_____")
     session = login()
 
@@ -81,10 +95,12 @@ def main():
         f"[DEBUG] booking reached here at {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}"
     )
 
-    schedule = get_court_schedule(
-        session, user_location, date, user_start_time, user_end_time
-    )
-    booking_info = find_court(schedule, date, price)
+    # schedule = get_court_schedule(
+    #     session, user_location, date, user_start_time, user_end_time
+    # )
+    booking_info = find_court(
+        public_schedule, date, price
+    )  # TODO: move this before midnight
 
     while booking_info is not None:
         try:
