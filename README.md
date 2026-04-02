@@ -183,12 +183,16 @@ automated-court-booker/
 2. **Create and activate a virtual environment** (optional but recommended)
 
    ```bash
+   # One-time setup
    python -m venv venv
 
-   # On Windows
+   # Windows (PowerShell)
    venv\Scripts\activate
 
-   # On macOS/Linux
+   # OR Windows (Command Prompt)
+   venv\Scripts\activate.bat
+
+   # OR macOS/Linux/Git Bash
    source venv/bin/activate
    ```
 
