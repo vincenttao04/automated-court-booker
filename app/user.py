@@ -1,5 +1,6 @@
 # Standard Library
 import os
+import time
 
 # Third-Party Libraries
 import requests
@@ -66,11 +67,15 @@ def login() -> requests.Session:
         }
     )
 
-    print(f"\n{os.getenv('USER_NUMBER')} login successful")
+    print(f"\nlogin successful: {os.getenv('USER_NUMBER')}")
     return session
 
 
 def logout(session: requests.Session) -> None:
+    if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+        print("waiting 10 seconds before logging out...")
+        time.sleep(10)
+
     # Fetch request payload
     url = os.getenv("LOGOUT_URL")
     payload = {"device_id": "Badminton-Test-ABC-001"}
@@ -83,7 +88,7 @@ def logout(session: requests.Session) -> None:
     if data.get("status") != "success":
         raise Exception("LOGOUT FAILED")
 
-    print(f"\n{os.getenv('USER_NUMBER')} logout successful")
+    print(f"\nlogout successful: {os.getenv('USER_NUMBER')}")
     return
 
 
@@ -99,6 +104,5 @@ def fetch_user_detail(session: requests.Session, property: str) -> None:
     if data.get("status") != "success":
         raise Exception("FETCH USER DETAIL FAILED")
 
-    property_label = property.title().replace("_", " ")
-    print(f"\n{property_label}: {data['data'].get(property)}")
+    print(f"\n{property}: {data['data'].get(property)}")
     return
