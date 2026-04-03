@@ -14,7 +14,7 @@ DEFAULT_END = "23:00"
 DEFAULT_LOCATION = "bond_crescent"
 
 
-def wait_until() -> None:
+def is_near_target() -> bool:
     # Convert string into datetime object
     target_time = "00:00:00"
     target_time = datetime.strptime(target_time, "%H:%M:%S").time()
@@ -34,14 +34,15 @@ def wait_until() -> None:
     # If the wait time is more than 61 seconds, exit
     wait_time = run_at - now
     if wait_time > timedelta(seconds=61):
-        sys.exit(f"⚠ wait time exceeds 61 seconds. exiting.")
+        print(f"⚠ wait time exceeds 61 seconds.")
+        return False
 
     print("time until project runs: ", str(wait_time))
     time.sleep(wait_time.total_seconds())  # sleep until the target time
 
     print(f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}")
 
-    return
+    return True
 
 
 @dataclass
@@ -65,7 +66,7 @@ def fetch_criteria() -> BookingCriteria | None:
         day
     )  # e.g. {'start': '18:00', 'end': '20:00'}
     if not day_schedule:
-        print(f"No booking scheduled for {day}. Exiting.")
+        print(f"no booking scheduled for {day}. exiting.")
         return
 
     return BookingCriteria(
