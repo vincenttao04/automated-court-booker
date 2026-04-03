@@ -34,16 +34,18 @@ def wait_until() -> None:
     # If the wait time is more than 61 seconds, exit
     wait_time = run_at - now
     if wait_time > timedelta(seconds=61):
-        sys.exit(f"Wait time exceeds 61 seconds ({run_at}). Exiting.")
+        sys.exit(f"⚠ wait time exceeds 61 seconds. exiting.")
 
-    print("[DEBUG] Time until project runs: ", str(wait_time))
+    print("time until project runs: ", str(wait_time))
     time.sleep(wait_time.total_seconds())  # sleep until the target time
+
+    print(f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}")
 
     return
 
 
 @dataclass
-class BookingPreferences:
+class BookingCriteria:
     date: str
     start_time: str
     end_time: str
@@ -51,7 +53,7 @@ class BookingPreferences:
     price: int
 
 
-def fetch_preferences() -> BookingPreferences | None:
+def fetch_criteria() -> BookingCriteria | None:
     config = load_config()
 
     # Fetch user's booking preferences, add 1 day buffer
@@ -66,7 +68,7 @@ def fetch_preferences() -> BookingPreferences | None:
         print(f"No booking scheduled for {day}. Exiting.")
         return
 
-    return BookingPreferences(
+    return BookingCriteria(
         date=date,
         start_time=day_schedule.get("start", DEFAULT_START),
         end_time=day_schedule.get("end", DEFAULT_END),

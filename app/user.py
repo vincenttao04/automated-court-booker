@@ -99,6 +99,5 @@ def fetch_user_detail(session: requests.Session, property: str) -> None:
     if data.get("status") != "success":
         raise Exception("FETCH USER DETAIL FAILED")
 
-    property_label = property.title().replace("_", " ")
-    print(f"\n{property_label}: {data['data'].get(property)}")
+    print(f"\n{property}: {data['data'].get(property)}")
     return

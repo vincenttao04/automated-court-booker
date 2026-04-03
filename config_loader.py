@@ -27,7 +27,7 @@ def load_config():
         except Exception as e:
             raise RuntimeError(f"failed to load remote config from s3/aws: {e}")
     else:
-        print("loading local config.yaml")
+        # print("loading local config.yaml") # debug log - can delete after s3 implemented
         with open("config.yaml", "r") as config_file:  # "r" -> read mode
             config_content = yaml.safe_load(config_file)
             return config_content

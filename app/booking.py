@@ -6,6 +6,8 @@ import re
 import requests
 from dotenv import load_dotenv
 
+from app.utils import BookingCriteria
+
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -13,13 +15,10 @@ if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
 
 def get_court_schedule(
     session: requests.Session,
-    location: str,
-    date: str,
-    user_start_time: str,
-    user_end_time: str,
+    criteria: BookingCriteria,
 ) -> dict:
     # Fetch request payload
-    url = f"{os.getenv('COURT_SCHEDULE')}{date}"
+    url = f"{os.getenv('COURT_SCHEDULE')}{criteria.date}"
 
     # Make fetch court availability GET request
     response = session.get(url, timeout=15)
@@ -30,23 +29,22 @@ def get_court_schedule(
         raise Exception("FETCH COURT AVAILABILITY FAILED")
 
     # Extract stadium specific court availability
-    if location == "corinthian_drive":
+    if criteria.location == "corinthian_drive":
         data = data["data"]["2"]["courts"]  # corinthian drive
     else:
         data = data["data"]["1"]["courts"]  # bond crescent
 
     # Filter courts only within the desired time range
-    if user_start_time and user_end_time:
+    if criteria.start_time and criteria.end_time:
         for court_data in data.values():
             timetable = court_data["timetable"]
 
             court_data["timetable"] = [
                 slot
                 for slot in timetable
-                if user_start_time <= slot["start_time"] < user_end_time
+                if criteria.start_time <= slot["start_time"] < criteria.end_time
             ]
 
-    print(f"\nfetch court availability successful ({date})")
     return data
 
 
