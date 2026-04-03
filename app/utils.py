@@ -3,11 +3,15 @@ import sys
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+from dataclasses import dataclass
 
 # Local Application Imports
 from config_loader import load_config
 
 NZ_TZ = ZoneInfo("Pacific/Auckland")  # set NZ timezone
+DEFAULT_START = "06:00"
+DEFAULT_END = "23:00"
+DEFAULT_LOCATION = "bond_crescent"
 
 
 def wait_until() -> None:
@@ -38,33 +42,34 @@ def wait_until() -> None:
     return
 
 
-def fetch_preferences() -> dict:
+@dataclass
+class BookingPreferences:
+    date: str
+    start_time: str
+    end_time: str
+    location: str
+    price: int
+
+
+def fetch_preferences() -> BookingPreferences | None:
     config = load_config()
 
     # Fetch user's booking preferences, add 1 day buffer
     now = datetime.now(NZ_TZ)
-    day = (
-        (now + timedelta(weeks=3) + timedelta(days=1)).strftime("%A").lower()
-    )  # e.g. 'monday'
-    date = (
-        (now + timedelta(weeks=3) + timedelta(days=1)).date().isoformat()
-    )  # e.g. '2024-07-15'
+    day = (now + timedelta(weeks=3, days=1)).strftime("%A").lower()  # e.g. 'monday'
+    date = (now + timedelta(weeks=3, days=1)).date().isoformat()  # e.g. '2024-07-15'
 
-    schedule = config["schedule"].get(day)  # e.g. {'start': '18:00', 'end': '20:00'}
-    if not schedule:
+    day_schedule = config["schedule"].get(
+        day
+    )  # e.g. {'start': '18:00', 'end': '20:00'}
+    if not day_schedule:
         print(f"No booking scheduled for {day}. Exiting.")
         return
 
-    start_time = schedule.get("start") or "06:00"
-    end_time = schedule.get("end") or "23:00"
-    location = schedule.get("location") or config["locations"][0]
-
-    price = config["price_per_court"]  # e.g. 27
-
-    return {
-        "date": date,
-        "start_time": start_time,
-        "end_time": end_time,
-        "location": location,
-        "price": price,
-    }
+    return BookingPreferences(
+        date=date,
+        start_time=day_schedule.get("start", DEFAULT_START),
+        end_time=day_schedule.get("end", DEFAULT_END),
+        location=day_schedule.get("location", DEFAULT_LOCATION),
+        price=config["price_per_court"] or 27,
+    )
