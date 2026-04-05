@@ -28,7 +28,7 @@ def get_court_schedule(
     if data.get("status") != "success":
         raise Exception("FETCH COURT AVAILABILITY FAILED")
 
-    return data
+    return process_court_schedule(data, criteria)
 
 
 def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
@@ -47,6 +47,7 @@ def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
             ]
 
     print(f"fetch court schedule: {criteria.location}, {criteria.date}")
+    return data
 
 
 def find_court(data: dict, date: str, price: int) -> dict | None:
@@ -57,6 +58,10 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
         "subtotal": "",
         "total": "",
         "user_id": "",
+        "member_count": 0,
+        "member_total": "",
+        "non_member_count": 0,
+        "non_member_total": "",
         # Remaining values to be filled in this function
         "court_id": None,
         "court_name": "",
@@ -82,7 +87,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
                 if current_length > best_length:
                     booking_info.update(
                         {
-                            "court_id": int(court_number),
+                            "court_id": court_number,
                             "court_name": court_name,
                             "start_time": current_start,
                             "end_time": slot["end_time"],
@@ -159,3 +164,15 @@ def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
     print("court payment successful - check email for confirmation/receipt")
 
     return
+
+
+def book_all_available(session, criteria, booking_info):
+    while booking_info is not None:
+        try:
+            user_id, booking_id = book_court(session, booking_info)
+            pay_court(session, user_id, booking_id)
+            schedule = get_court_schedule(session, criteria)
+            booking_info = find_court(schedule, criteria.date, criteria.price)
+        except Exception as e:
+            print(f"Error: {e}")
+            break

@@ -1,5 +1,4 @@
 # Standard Library
-import sys
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -35,23 +34,21 @@ def is_near_target() -> bool:
     if run_at <= now:
         run_at += timedelta(days=1)
 
-    # If the wait time is more than 61 seconds, exit
     wait_time = run_at - now
+    return wait_until_target(wait_time)
+
+
+def wait_until_target(wait_time: timedelta) -> None:
+    # If the wait time is more than 61 seconds, exit
     if wait_time > timedelta(seconds=61):
         print(f"⚠ wait time exceeds 61 seconds.")
         return False
 
-    wait_until_target(wait_time)
-
-    return True
-
-
-def wait_until_target(wait_time: timedelta) -> None:
     print("time until project runs: ", str(wait_time))
     time.sleep(wait_time.total_seconds())  # sleep until the target time
 
     print(f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}")
-    return
+    return True
 
 
 @dataclass
