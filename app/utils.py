@@ -41,13 +41,13 @@ def is_near_target() -> bool:
 def wait_until_target(wait_time: timedelta) -> None:
     # If the wait time is more than 61 seconds, exit
     if wait_time > timedelta(seconds=61):
-        print(f"⚠ wait time exceeds 61 seconds.")
+        print(f"⚠ wait time exceeds 61 seconds\n")
         return False
 
     print("time until project runs: ", str(wait_time))
     time.sleep(wait_time.total_seconds())  # sleep until the target time
 
-    print(f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}")
+    print(f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}\n")
     return True
 
 
@@ -56,7 +56,8 @@ class BookingCriteria:
     date: str
     start_time: str
     end_time: str
-    location: str
+    location_id: str
+    location_name: str
     price: int
 
 
@@ -79,6 +80,11 @@ def fetch_criteria() -> BookingCriteria | None:
         date=date,
         start_time=day_schedule.get("start", DEFAULT_START),
         end_time=day_schedule.get("end", DEFAULT_END),
-        location=LOCATION_IDS[day_schedule.get("location", DEFAULT_LOCATION)],
+        location_id=LOCATION_IDS[day_schedule.get("location", DEFAULT_LOCATION)],
+        location_name=(
+            "bond_crescent"
+            if day_schedule.get("location", DEFAULT_LOCATION) == "bond_crescent"
+            else "corinthian_drive"
+        ),
         price=config["price_per_court"] or 27,
     )

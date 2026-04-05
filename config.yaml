@@ -9,7 +9,9 @@ price_per_court: 27
 # Location is not mandatory. If not provided, the location will default to "bond_crescent".
 schedule:
   monday: null
-  tuesday: null
+  tuesday:
+    start: "06:00"
+    end: "08:00"
   wednesday:
     start: "19:00"
     end: "21:00"

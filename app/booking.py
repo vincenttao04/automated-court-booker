@@ -28,12 +28,14 @@ def get_court_schedule(
     if data.get("status") != "success":
         raise Exception("FETCH COURT AVAILABILITY FAILED")
 
+    print(f"fetch court schedule: {criteria.location_name}, {criteria.date}, between {criteria.start_time} and {criteria.end_time}")
+
     return process_court_schedule(data, criteria)
 
 
 def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
     # Extract stadium specific court availability
-    data = data["data"][criteria.location]["courts"]
+    data = data["data"][criteria.location_id]["courts"]
 
     # Filter courts only within the desired time range
     if criteria.start_time and criteria.end_time:
@@ -46,7 +48,6 @@ def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
                 if criteria.start_time <= slot["start_time"] < criteria.end_time
             ]
 
-    print(f"fetch court schedule: {criteria.location}, {criteria.date}")
     return data
 
 
@@ -107,7 +108,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
 
     print(f"longest availability: {best_length} slots/hours")
     print(
-        f"{booking_info['court_name'].lower()}, starting at {booking_info['start_time']}, ending at {booking_info['end_time']}"
+        f"{booking_info['court_name'].lower()}, between {booking_info['start_time']} and {booking_info['end_time']}\n"
     )
 
     return booking_info
@@ -161,7 +162,7 @@ def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
         error_message = extract_payment_error(response.text)
         raise Exception(error_message or "Unknown payment error")
 
-    print("court payment successful - check email for confirmation/receipt")
+    print("court payment successful - check email for confirmation/receipt\n")
 
     return
 
