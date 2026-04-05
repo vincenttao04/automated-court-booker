@@ -70,7 +70,7 @@ def login() -> requests.Session:
         }
     )
 
-    print(f"\nlogin successful: {os.getenv('USER_NUMBER')}")
+    print(f"login successful: {os.getenv('USER_NUMBER')}\n")
     return session
 
 
@@ -91,7 +91,7 @@ def logout(session: requests.Session) -> None:
     if data.get("status") != "success":
         raise Exception("LOGOUT FAILED")
 
-    print(f"\nlogout successful: {os.getenv('USER_NUMBER')}")
+    print(f"logout successful: {os.getenv('USER_NUMBER')}")
     return
 
 
@@ -107,5 +107,5 @@ def fetch_user_detail(session: requests.Session, field: str) -> None:
     if data.get("status") != "success":
         raise Exception("FETCH USER DETAIL FAILED")
 
-    print(f"\n{field}: {data['data'].get(field)}")
+    print(f"{field}: {data['data'].get(field)}\n")
     return
