@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 from requests.adapters import HTTPAdapter
 
 
+DEVICE_ID = "Badminton-Test-ABC-001"
+
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
 
@@ -46,7 +48,7 @@ def login() -> requests.Session:
     payload = {
         "number": os.getenv("USER_NUMBER"),
         "password": os.getenv("USER_PASSWORD"),
-        "device_id": "Badminton-Test-ABC-001",
+        "device_id": DEVICE_ID,
     }
 
     # Create request session
@@ -78,7 +80,7 @@ def logout(session: requests.Session) -> None:
 
     # Fetch request payload
     url = os.getenv("LOGOUT_URL")
-    payload = {"device_id": "Badminton-Test-ABC-001"}
+    payload = {"device_id": DEVICE_ID}
 
     # Make logout POST request
     response = session.post(url, json=payload, timeout=15)
@@ -92,7 +94,7 @@ def logout(session: requests.Session) -> None:
     return
 
 
-def fetch_user_detail(session: requests.Session, property: str) -> None:
+def fetch_user_detail(session: requests.Session, field: str) -> None:
     # Fetch request payload
     url = os.getenv("USER_DATA")
 
@@ -104,5 +106,5 @@ def fetch_user_detail(session: requests.Session, property: str) -> None:
     if data.get("status") != "success":
         raise Exception("FETCH USER DETAIL FAILED")
 
-    print(f"\n{property}: {data['data'].get(property)}")
+    print(f"\n{field}: {data['data'].get(field)}")
     return

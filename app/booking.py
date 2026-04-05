@@ -28,11 +28,12 @@ def get_court_schedule(
     if data.get("status") != "success":
         raise Exception("FETCH COURT AVAILABILITY FAILED")
 
+    return data
+
+
+def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
     # Extract stadium specific court availability
-    if criteria.location == "corinthian_drive":
-        data = data["data"]["2"]["courts"]  # corinthian drive
-    else:
-        data = data["data"]["1"]["courts"]  # bond crescent
+    data = data["data"][criteria.location]["courts"]
 
     # Filter courts only within the desired time range
     if criteria.start_time and criteria.end_time:
@@ -45,7 +46,7 @@ def get_court_schedule(
                 if criteria.start_time <= slot["start_time"] < criteria.end_time
             ]
 
-    return data
+    print(f"fetch court schedule: {criteria.location}, {criteria.date}")
 
 
 def find_court(data: dict, date: str, price: int) -> dict | None:
@@ -107,7 +108,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
     return booking_info
 
 
-def book_court(session: requests.Session, booking_info: dict) -> tuple[int | int]:
+def book_court(session: requests.Session, booking_info: dict) -> tuple[int, int]:
     # Fetch request_one payload
     url = os.getenv("BOOKING_URL")
 

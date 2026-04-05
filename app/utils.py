@@ -12,6 +12,10 @@ NZ_TZ = ZoneInfo("Pacific/Auckland")  # set NZ timezone
 DEFAULT_START = "06:00"
 DEFAULT_END = "23:00"
 DEFAULT_LOCATION = "bond_crescent"
+LOCATION_IDS = {
+    "bond_crescent": "1",
+    "corinthian_drive": "2",
+}
 
 
 def is_near_target() -> bool:
@@ -37,12 +41,17 @@ def is_near_target() -> bool:
         print(f"⚠ wait time exceeds 61 seconds.")
         return False
 
+    wait_until_target(wait_time)
+
+    return True
+
+
+def wait_until_target(wait_time: timedelta) -> None:
     print("time until project runs: ", str(wait_time))
     time.sleep(wait_time.total_seconds())  # sleep until the target time
 
     print(f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}")
-
-    return True
+    return
 
 
 @dataclass
@@ -66,13 +75,13 @@ def fetch_criteria() -> BookingCriteria | None:
         day
     )  # e.g. {'start': '18:00', 'end': '20:00'}
     if not day_schedule:
-        print(f"no booking scheduled for {day}. exiting.")
-        return
+        print(f"no booking scheduled for {day}")
+        return None
 
     return BookingCriteria(
         date=date,
         start_time=day_schedule.get("start", DEFAULT_START),
         end_time=day_schedule.get("end", DEFAULT_END),
-        location=day_schedule.get("location", DEFAULT_LOCATION),
+        location=LOCATION_IDS[day_schedule.get("location", DEFAULT_LOCATION)],
         price=config["price_per_court"] or 27,
     )
