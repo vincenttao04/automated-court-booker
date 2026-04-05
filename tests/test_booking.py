@@ -291,7 +291,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
 
     result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
-    assert result["court_id"] == 1
+    assert result["court_id"] == "1"
     assert result["court_name"] == "Court 1"
     assert result["start_time"] == "12:00"
     assert result["end_time"] == "16:00"
@@ -300,7 +300,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
 
     result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
-    assert result["court_id"] == 2
+    assert result["court_id"] == "2"
     assert result["court_name"] == "Court 2"
     assert result["start_time"] == "07:00"
     assert result["end_time"] == "11:00"
@@ -309,7 +309,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
 
     result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
-    assert result["court_id"] == 3
+    assert result["court_id"] == "3"
     assert result["court_name"] == "Court 3"
     assert result["start_time"] == "16:00"
     assert result["end_time"] == "18:00"
@@ -318,7 +318,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
 
     result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
-    assert result["court_id"] == 1
+    assert result["court_id"] == "1"
     assert result["court_name"] == "Court 1"
     assert result["start_time"] == "06:00"
     assert result["end_time"] == "07:00"
@@ -327,7 +327,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
 
     result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
-    assert result["court_id"] == 2
+    assert result["court_id"] == "2"
     assert result["court_name"] == "Court 2"
     assert result["start_time"] == "18:00"
     assert result["end_time"] == "19:00"
@@ -336,7 +336,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
 
     result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
-    assert result["court_id"] == 3
+    assert result["court_id"] == "3"
     assert result["court_name"] == "Court 3"
     assert result["start_time"] == "11:00"
     assert result["end_time"] == "12:00"
