@@ -70,11 +70,16 @@ def login() -> requests.Session:
         }
     )
 
-    print(f"login successful: {os.getenv('USER_NUMBER')}\n")
+    print(f"login successful: {os.getenv('USER_NUMBER')}")
+    fetch_user_detail(session, "credit_balance")
+    print("")
+
     return session
 
 
 def logout(session: requests.Session) -> None:
+    fetch_user_detail(session, "credit_balance")
+
     if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
         print("waiting 10 seconds before logging out...")
         time.sleep(10)
@@ -91,7 +96,7 @@ def logout(session: requests.Session) -> None:
     if data.get("status") != "success":
         raise Exception("LOGOUT FAILED")
 
-    print(f"logout successful: {os.getenv('USER_NUMBER')}")
+    print(f"logout successful: {os.getenv('USER_NUMBER')}\n")
     return
 
 
@@ -107,5 +112,5 @@ def fetch_user_detail(session: requests.Session, field: str) -> None:
     if data.get("status") != "success":
         raise Exception("FETCH USER DETAIL FAILED")
 
-    print(f"{field}: {data['data'].get(field)}\n")
+    print(f"{field}: {data['data'].get(field)}")
     return

@@ -3,7 +3,7 @@ import sys
 
 # Local Application Imports
 from app.booking import find_court, get_court_schedule, book_all_available
-from app.user import fetch_user_detail, login, logout, create_session
+from app.user import login, logout, create_session
 from app.utils import is_near_target, fetch_criteria
 
 
@@ -17,25 +17,21 @@ def main():
         booking_info = find_court(public_schedule, criteria.date, criteria.price)
 
         if booking_info is None:
-            print("\npre-fetch: no available courts found")
-            print("================= FINISH =================\n")
+            print("================= FINISH =================")
             sys.exit()
 
         session = login()
-        fetch_user_detail(session, "credit_balance")
 
         if not is_near_target():
             logout(session)
-            print("================== FINISH ==================\n")
+            print("================== FINISH ==================")
             sys.exit()
 
         book_all_available(session, criteria, booking_info)
 
-        fetch_user_detail(session, "credit_balance")
-
         logout(session)
 
-    print("================= FINISH =================\n")
+    print("================= FINISH =================")
 
 
 if __name__ == "__main__":

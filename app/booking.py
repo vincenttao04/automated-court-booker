@@ -28,7 +28,9 @@ def get_court_schedule(
     if data.get("status") != "success":
         raise Exception("FETCH COURT AVAILABILITY FAILED")
 
-    print(f"fetch court schedule: {criteria.location_name}, {criteria.date}, between {criteria.start_time} and {criteria.end_time}")
+    print(
+        f"fetch court schedule: {criteria.location_name}, {criteria.date}, between {criteria.start_time} and {criteria.end_time}"
+    )
 
     return process_court_schedule(data, criteria)
 
@@ -101,7 +103,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
 
     # Check if any court availability was found
     if best_length == 0:
-        print("\nno available courts found")
+        print("no available courts found\n")
         return None
 
     booking_info["price"] = best_length * price
@@ -150,7 +152,9 @@ def extract_payment_error(text: str) -> str:
     return None
 
 
-def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
+def pay_court(
+    session: requests.Session, user_id: int, booking_id: int, count: int
+) -> None:
     # Fetch request payload
     url = f"{os.getenv('PAYMENT_URL')}{user_id}/{booking_id}"
 
@@ -162,18 +166,22 @@ def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
         error_message = extract_payment_error(response.text)
         raise Exception(error_message or "Unknown payment error")
 
-    print("court payment successful - check email for confirmation/receipt\n")
+    print(
+        f"({count}) court payment successful - check email for confirmation/receipt\n"
+    )
 
     return
 
 
 def book_all_available(session, criteria, booking_info):
+    count = 1
     while booking_info is not None:
         try:
             user_id, booking_id = book_court(session, booking_info)
-            pay_court(session, user_id, booking_id)
+            pay_court(session, user_id, booking_id, count)
             schedule = get_court_schedule(session, criteria)
             booking_info = find_court(schedule, criteria.date, criteria.price)
+            count += 1
         except Exception as e:
             print(f"Error: {e}")
             break

@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from config_loader import load_config
 
 NZ_TZ = ZoneInfo("Pacific/Auckland")  # set NZ timezone
+TARGET_TIME = "01:36:00"  ## HH:MM:SS, 24-hour format
+WEEKS_IN_ADVANCE = 2
 DEFAULT_START = "06:00"
 DEFAULT_END = "23:00"
 DEFAULT_LOCATION = "bond_crescent"
@@ -19,8 +21,7 @@ LOCATION_IDS = {
 
 def is_near_target() -> bool:
     # Convert string into datetime object
-    target_time = "00:00:00"
-    target_time = datetime.strptime(target_time, "%H:%M:%S").time()
+    target_time = datetime.strptime(TARGET_TIME, "%H:%M:%S").time()
     now = datetime.now(NZ_TZ)
 
     # Combine current date with target time
@@ -47,7 +48,9 @@ def wait_until_target(wait_time: timedelta) -> None:
     print("time until project runs: ", str(wait_time))
     time.sleep(wait_time.total_seconds())  # sleep until the target time
 
-    print(f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}\n")
+    print(
+        f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}\n"
+    )
     return True
 
 
@@ -66,8 +69,12 @@ def fetch_criteria() -> BookingCriteria | None:
 
     # Fetch user's booking preferences, add 1 day buffer
     now = datetime.now(NZ_TZ)
-    day = (now + timedelta(weeks=3, days=1)).strftime("%A").lower()  # e.g. 'monday'
-    date = (now + timedelta(weeks=3, days=1)).date().isoformat()  # e.g. '2024-07-15'
+    day = (
+        (now + timedelta(weeks=WEEKS_IN_ADVANCE, days=1)).strftime("%A").lower()
+    )  # e.g. 'monday'
+    date = (
+        (now + timedelta(weeks=WEEKS_IN_ADVANCE, days=1)).date().isoformat()
+    )  # e.g. '2024-07-15'
 
     day_schedule = config["schedule"].get(
         day
