@@ -6,11 +6,49 @@ import re
 import requests
 from dotenv import load_dotenv
 
-from app.utils import BookingCriteria
+# Local Application Imports
+from app.scheduler import BookingCriteria
 
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
+
+
+# Helper function: clean and filter court schedule data based on booking criteria
+def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
+    # Extract stadium specific court availability
+    data = data["data"][criteria.location_id]["courts"]
+
+    # Filter courts only within the desired time range
+    if criteria.start_time and criteria.end_time:
+        for court_data in data.values():
+            timetable = court_data["timetable"]
+
+            court_data["timetable"] = [
+                slot
+                for slot in timetable
+                if criteria.start_time <= slot["start_time"] < criteria.end_time
+            ]
+
+    return data
+
+
+# Helper function: extract payment error message from HTML response
+def extract_payment_error(text: str) -> str:
+    if not text:
+        return None
+
+    # Use regex to find the error message within the HTML content
+    match = re.search(
+        r'<div class="text-xl font-bold[^"]*">\s*(.*?)\s*</div>',
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+
+    if match:
+        return " ".join(match.group(1).split())
+
+    return None
 
 
 def get_court_schedule(
@@ -28,24 +66,11 @@ def get_court_schedule(
     if data.get("status") != "success":
         raise Exception("FETCH COURT AVAILABILITY FAILED")
 
-    # Extract stadium specific court availability
-    if criteria.location == "corinthian_drive":
-        data = data["data"]["2"]["courts"]  # corinthian drive
-    else:
-        data = data["data"]["1"]["courts"]  # bond crescent
+    print(
+        f"fetch court schedule: {criteria.location_name}, {criteria.date}, between {criteria.start_time} and {criteria.end_time}"
+    )
 
-    # Filter courts only within the desired time range
-    if criteria.start_time and criteria.end_time:
-        for court_data in data.values():
-            timetable = court_data["timetable"]
-
-            court_data["timetable"] = [
-                slot
-                for slot in timetable
-                if criteria.start_time <= slot["start_time"] < criteria.end_time
-            ]
-
-    return data
+    return process_court_schedule(data, criteria)
 
 
 def find_court(data: dict, date: str, price: int) -> dict | None:
@@ -56,6 +81,10 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
         "subtotal": "",
         "total": "",
         "user_id": "",
+        "member_count": 0,
+        "member_total": "",
+        "non_member_count": 0,
+        "non_member_total": "",
         # Remaining values to be filled in this function
         "court_id": None,
         "court_name": "",
@@ -81,7 +110,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
                 if current_length > best_length:
                     booking_info.update(
                         {
-                            "court_id": int(court_number),
+                            "court_id": court_number,
                             "court_name": court_name,
                             "start_time": current_start,
                             "end_time": slot["end_time"],
@@ -94,20 +123,20 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
 
     # Check if any court availability was found
     if best_length == 0:
-        print("\nno available courts found")
+        print("no available courts found\n")
         return None
 
     booking_info["price"] = best_length * price
 
     print(f"longest availability: {best_length} slots/hours")
     print(
-        f"{booking_info['court_name'].lower()}, starting at {booking_info['start_time']}, ending at {booking_info['end_time']}"
+        f"{booking_info['court_name'].lower()}, between {booking_info['start_time']} and {booking_info['end_time']}\n"
     )
 
     return booking_info
 
 
-def book_court(session: requests.Session, booking_info: dict) -> tuple[int | int]:
+def book_court(session: requests.Session, booking_info: dict) -> tuple[int, int]:
     # Fetch request_one payload
     url = os.getenv("BOOKING_URL")
 
@@ -125,25 +154,9 @@ def book_court(session: requests.Session, booking_info: dict) -> tuple[int | int
     )  # returns user_id and booking_id as integers
 
 
-# Helper function: extract payment error message from HTML response
-def extract_payment_error(text: str) -> str:
-    if not text:
-        return None
-
-    # Use regex to find the error message within the HTML content
-    match = re.search(
-        r'<div class="text-xl font-bold[^"]*">\s*(.*?)\s*</div>',
-        text,
-        re.IGNORECASE | re.DOTALL,
-    )
-
-    if match:
-        return " ".join(match.group(1).split())
-
-    return None
-
-
-def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
+def pay_court(
+    session: requests.Session, user_id: int, booking_id: int, count: int
+) -> None:
     # Fetch request payload
     url = f"{os.getenv('PAYMENT_URL')}{user_id}/{booking_id}"
 
@@ -155,6 +168,24 @@ def pay_court(session: requests.Session, user_id: int, booking_id: int) -> None:
         error_message = extract_payment_error(response.text)
         raise Exception(error_message or "Unknown payment error")
 
-    print("court payment successful - check email for confirmation/receipt")
+    print(
+        f"({count}) court payment successful - check email for confirmation/receipt\n"
+    )
 
     return
+
+
+def book_all_available(
+    session: requests.Session, criteria: BookingCriteria, booking_info: dict
+):
+    count = 1
+    while booking_info is not None:
+        try:
+            user_id, booking_id = book_court(session, booking_info)
+            pay_court(session, user_id, booking_id, count)
+            schedule = get_court_schedule(session, criteria)
+            booking_info = find_court(schedule, criteria.date, criteria.price)
+            count += 1
+        except Exception as e:
+            print(f"Error: {e}")
+            break

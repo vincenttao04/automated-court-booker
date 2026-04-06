@@ -3,10 +3,12 @@ import os
 import time
 
 # Third-Party Libraries
-import requests
 from dotenv import load_dotenv
+import requests
 from requests.adapters import HTTPAdapter
 
+
+DEVICE_ID = "Badminton-Test-ABC-001"
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -15,9 +17,10 @@ if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
 def create_session():
     headers = {
         "Content-Type": "application/json",
+        "Accept": "application/json",
         "Origin": "https://book.bnh.org.nz",
         "Referer": "https://book.bnh.org.nz/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
     }
 
     # Instantiate request session
@@ -36,6 +39,22 @@ def create_session():
     return session
 
 
+def fetch_user_detail(session: requests.Session, field: str) -> None:
+    # Fetch request payload
+    url = os.getenv("USER_DATA")
+
+    # Make fetch user detail GET request
+    response = session.get(url, timeout=15)
+    data = response.json()
+
+    # Check if fetch user detail was successful
+    if data.get("status") != "success":
+        raise Exception("FETCH USER DETAIL FAILED")
+
+    print(f"{field}: {data['data'].get(field)}")
+    return
+
+
 def login() -> requests.Session:
     # Fetch request payload
     url = os.getenv("LOGIN_URL")
@@ -46,7 +65,7 @@ def login() -> requests.Session:
     payload = {
         "number": os.getenv("USER_NUMBER"),
         "password": os.getenv("USER_PASSWORD"),
-        "device_id": "Badminton-Test-ABC-001",
+        "device_id": DEVICE_ID,
     }
 
     # Create request session
@@ -67,18 +86,23 @@ def login() -> requests.Session:
         }
     )
 
-    print(f"\nlogin successful: {os.getenv('USER_NUMBER')}")
+    print(f"login successful: {os.getenv('USER_NUMBER')}")
+    fetch_user_detail(session, "credit_balance")
+    print("")
+
     return session
 
 
 def logout(session: requests.Session) -> None:
+    fetch_user_detail(session, "credit_balance")
+
     if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
         print("waiting 10 seconds before logging out...")
         time.sleep(10)
 
     # Fetch request payload
     url = os.getenv("LOGOUT_URL")
-    payload = {"device_id": "Badminton-Test-ABC-001"}
+    payload = {"device_id": DEVICE_ID}
 
     # Make logout POST request
     response = session.post(url, json=payload, timeout=15)
@@ -88,21 +112,5 @@ def logout(session: requests.Session) -> None:
     if data.get("status") != "success":
         raise Exception("LOGOUT FAILED")
 
-    print(f"\nlogout successful: {os.getenv('USER_NUMBER')}")
-    return
-
-
-def fetch_user_detail(session: requests.Session, property: str) -> None:
-    # Fetch request payload
-    url = os.getenv("USER_DATA")
-
-    # Make fetch user detail GET request
-    response = session.get(url, timeout=15)
-    data = response.json()
-
-    # Check if fetch user detail was successful
-    if data.get("status") != "success":
-        raise Exception("FETCH USER DETAIL FAILED")
-
-    print(f"\n{property}: {data['data'].get(property)}")
+    print(f"logout successful: {os.getenv('USER_NUMBER')}\n")
     return

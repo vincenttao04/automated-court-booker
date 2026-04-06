@@ -111,16 +111,17 @@ The project uses a sliding-window-style approach to find optimal court slots:
 ### Local Execution Flow
 
 1. **Date Calculation**: Determines the booking date up to three weeks in advance using the Pacific/Auckland timezone
-2. **Config Loading**: Loads booking preferences from `config.yaml` (or a remote URL if configured)
-3. **Schedule Check**: Checks whether booking is enabled for the calculated day of the week
-4. **Authentication**: Logs in and establishes an authenticated session
-5. **Availability Fetch**: Retrieves court availability for the target date and location
-6. **Slot Finding**: Identifies the longest contiguous available time slot within user-defined start and end times ([Booking Algorithm](#booking-algorithm))
-7. **Booking Loop**: Books all available slots that meet the criteria
-8. **Payment**: Automatically completes payment using account credit
-9. **Repeat**: Repeats availability checking and booking until no suitable courts remain
-10. **Confirmation**: Displays the updated account credit balance
-11. **Cleanup**: Logs out and closes the session
+2. **Config Loading**: Loads booking criteria from `config.yaml` (or a remote URL if configured)
+3. **Schedule Check**: Checks whether booking criteria is set for the calculated day of the week
+4. **Public Schedule Fetch**: Retrieves the day-specific court schedule using an unauthenticated session to check for court availability before logging in
+5. **Court Selection**: Identifies the longest contiguous available time slot within user-defined start and end times ([Booking Algorithm](#booking-algorithm))
+6. **Authentication**: Logs in and establishes an authenticated session
+7. **Timing Check**: Waits until the booking window opens to the public before carrying on; if deployed, the application exits early if the wait time exceeds 61 seconds
+8. **Book Courts**: Books the pre-identified longest contiguous courts
+9. **Payment**: Automatically completes payment using account credit
+10. **Booking Loop**: Repeats court schedule fetching (4), slot selection (5), booking (8), and payment (9) until no suitable courts remain
+11. **Confirmation**: Displays the updated account credit balance
+12. **Cleanup**: Logs out and closes the session
 
 ### AWS Lambda Execution Flow
 
@@ -142,17 +143,21 @@ This automated process runs once per day without any manual intervention.
 automated-court-booker/
 ├── app/
 │   ├── booking.py           # Court availability, optimisation, booking, and payment logic
-│   ├── user.py              # Authentication & user logic
+│   ├── config_loader.py     # YAML config loader (local file or remote S3 URL)
+│   ├── constants.py         # Shared constants (timezone, defaults, location IDs)
+│   ├── models.py            # BookingCriteria dataclass
+│   ├── scheduler.py         # Timing logic and booking criteria resolution
+│   ├── user.py              # Authentication and user session logic
 │   └── __init__.py
 │
 ├── tests/
 │   ├── test_booking.py      # Booking logic tests
-│   └── test_user.py         # User logic tests
+│   ├── test_user.py         # User logic tests
+│   └── __init__.py
 │
 ├── build-lambda.ps1         # PowerShell script to build the Lambda deployment package
 ├── build-lambda.sh          # Bash script to build the Lambda deployment package
 ├── config.yaml              # Booking preferences (local dev)
-├── config_loader.py         # YAML config loader
 ├── handler.py               # AWS Lambda entry point
 ├── main.py                  # Main application entry point
 ├── requirements.txt         # Production / AWS Lambda dependencies
@@ -235,14 +240,10 @@ automated-court-booker/
    Edit `config.yaml` to define your booking schedule and preferences
 
    ```yaml
-   # Available locations
-   locations:
-     - bond_crescent
-     - corinthian_drive
-
    price_per_court: 27
 
    # Weekly schedule (time in 24-hour format: "HH:MM")
+   # Default location: bond_crescent
    schedule:
      monday: null
      tuesday: null
@@ -255,7 +256,7 @@ automated-court-booker/
      sunday:
        start: "12:00"
        end: "19:00"
-       location: "bond_crescent" # Optional: override default location
+       location: "corinthian_drive" # override default location
    ```
 
 6. **Run the application**
@@ -267,15 +268,14 @@ automated-court-booker/
 
 ### config.yaml Options
 
-| Field                     | Type      | Description                                               | Required |
-| ------------------------- | --------- | --------------------------------------------------------- | -------- |
-| `locations`               | list      | Available court locations (first location listed is used) | Yes      |
-| `price_per_court`         | int       | Price per hour slot                                       | Yes      |
-| `schedule`                | dict      | Weekly booking schedule by day                            | Yes      |
-| `schedule.<day>`          | dict/null | Day-specific settings or `null` to skip booking           | Yes      |
-| `schedule.<day>.start`    | string    | Preferred start time (24-hour format: "HH:MM")            | No       |
-| `schedule.<day>.end`      | string    | Preferred end time (24-hour format: "HH:MM")              | No       |
-| `schedule.<day>.location` | string    | Location override for specific day                        | No       |
+| Field                     | Type      | Description                                     | Required |
+| ------------------------- | --------- | ----------------------------------------------- | -------- |
+| `price_per_court`         | int       | Price per hour slot                             | Yes      |
+| `schedule`                | dict      | Weekly booking schedule by day                  | Yes      |
+| `schedule.<day>`          | dict/null | Day-specific settings or `null` to skip booking | Yes      |
+| `schedule.<day>.start`    | string    | Preferred start time (24-hour format: "HH:MM")  | No       |
+| `schedule.<day>.end`      | string    | Preferred end time (24-hour format: "HH:MM")    | No       |
+| `schedule.<day>.location` | string    | Location override for specific day              | No       |
 
 **Time Format Notes:**
 
@@ -283,6 +283,7 @@ automated-court-booker/
 - Leading zeros are required (e.g. `"09:00"`)
 - If `start` is omitted, defaults to `"06:00"`
 - If `end` is omitted, defaults to `"23:00"`
+- If location is omitted, defaults to `"bond_crescent"`
 - If a day is set to `null`, no booking attempt is made
 
 ### Environment Variables
@@ -364,7 +365,7 @@ Both scripts perform the same operations:
 1. Clean old artifacts (removes existing `package/` directory and `lambda.zip`)
 2. Create a fresh `package/` directory
 3. Install Python dependencies from `requirements.txt` into `package/`
-4. Copy project files (`app/`, `main.py`, `handler.py`, `config_loader.py`, `config.yaml`) to `package/`
+4. Copy project files (`app/`, `main.py`, `handler.py`, `config.yaml`) to `package/`
 5. Remove `__pycache__` folders and `bin/` directory (reduces ZIP size)
 6. Create `lambda.zip` with the packaged application
 
@@ -436,7 +437,7 @@ The Lambda function is triggered automatically using **Amazon EventBridge Schedu
    - **Time zone**: Select your local time zone (e.g., `Pacific/Auckland` for New Zealand)
    - **Flexible time window**: Disabled
 
-   Note: Amazon EventBridge cannot guarantee execution exactly at the start of a minute and may trigger with a small delay. For this reason, the schedule is set to 23:59 instead of 00:00. The AWS Lambda function includes logic to wait until 00:00, at which point the core booking logic is executed.
+   Note: Amazon EventBridge cannot guarantee execution exactly at the start of a minute and may trigger with a small delay. For this reason, the schedule is set to 23:59 instead of 00:00. The Lambda function includes timing logic (`is_near_target`) that waits until the target booking time before executing the core booking logic. If the wait exceeds 61 seconds, the function exits early.
 
 4. **Select target:**
    - **Target API**: AWS Lambda Invoke
@@ -476,22 +477,23 @@ To verify the deployment:
 **Expected output on a booking day:**
 
 ```
-automated court booker !
+========== AUTOMATED COURT BOOKER ==========
 
-_____LOGIN ATTEMPT_____
-loading remote config
+login successful: 123456
+credit_balance: 108
 
-123456 login successful
-
-_____BOOKING ATTEMPT_____
-
-Credit Balance: 108
-
-fetch court availability successful (2025-02-19)
+fetch court schedule: bond_crescent, 2025-02-19, between 19:00 and 21:00
 longest availability: 2 slots/hours
-court: 3, starting at 19:00, ending at 21:00
-court payment successful - check email for confirmation/receipt
-...
+court 3, between 19:00 and 21:00
+
+(1) court payment successful - check email for confirmation/receipt
+
+no available courts found
+
+credit_balance: 66
+logout successful: 123456
+
+================= FINISH =================
 ```
 
 ### 6. Cost and Free Tier Usage
@@ -563,7 +565,7 @@ Under normal usage, the deployment should incur no AWS charges and stay well wit
 
 ## Limitations
 
-- **Booking window constraints**: The application can only book courts within the venue’s allowed advance booking window (up to three weeks ahead). This is an external limitation.
+- **Booking window constraints**: The application can only book courts within the venue's allowed advance booking window (up to three weeks ahead). This is an external limitation.
 - **Sequential execution**: Court availability is checked and booked sequentially to avoid double bookings. The application does not perform parallel booking attempts.
 - **No retry or backoff logic**: If a booking, availability fetch, or payment step fails, the process exits without automatic retries.
 - **Dependency on external system availability**: Successful booking depends on the stability and responsiveness of the Badminton North Harbour booking system. This is an external limitation.
@@ -572,8 +574,9 @@ Under normal usage, the deployment should incur no AWS charges and stay well wit
 ## Future Improvements
 
 1. **Web dashboard**: Create a UI for managing preferences and viewing booking history
-2. **Better error handling**: More granular error messages and retry logic
-3. Add output screenshots for each scenario (no credit, no courts, successful booking)
+2. **Better error handling**: More granular error messages and retry logic (proper Exception handling)
+3. **Automatic pipeline deployment**: Updates pushed to the repository's main branch are automatically deployed to AWS Lambda
+4. Add output screenshots for each scenario (no credit, no courts, successful booking)
 
 ## License
 
