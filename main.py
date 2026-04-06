@@ -1,10 +1,7 @@
-# Standard Library
-import sys
-
 # Local Application Imports
-from app.booking import find_court, get_court_schedule, book_all_available
-from app.user import login, logout, create_session
-from app.utils import is_near_target, fetch_criteria
+from app.booking import book_all_available, find_court, get_court_schedule
+from app.scheduler import fetch_criteria, is_near_target
+from app.user import create_session, login, logout
 
 
 def main():
@@ -18,20 +15,21 @@ def main():
 
         if booking_info is None:
             print("================= FINISH =================")
-            sys.exit()
+            return
 
         session = login()
 
         if not is_near_target():
             logout(session)
             print("================== FINISH ==================")
-            sys.exit()
+            return
 
         book_all_available(session, criteria, booking_info)
 
         logout(session)
 
     print("================= FINISH =================")
+    return
 
 
 if __name__ == "__main__":

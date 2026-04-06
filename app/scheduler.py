@@ -2,21 +2,34 @@
 import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from dataclasses import dataclass
 
 # Local Application Imports
-from config_loader import load_config
+from app.config_loader import load_config
+from app.constants import (
+    DEFAULT_END,
+    DEFAULT_LOCATION,
+    DEFAULT_START,
+    LOCATION_IDS,
+    NZ_TZ,
+    TARGET_TIME,
+    WEEKS_IN_ADVANCE,
+)
+from app.models import BookingCriteria
 
-NZ_TZ = ZoneInfo("Pacific/Auckland")  # set NZ timezone
-TARGET_TIME = "01:36:00"  ## HH:MM:SS, 24-hour format
-WEEKS_IN_ADVANCE = 2
-DEFAULT_START = "06:00"
-DEFAULT_END = "23:00"
-DEFAULT_LOCATION = "bond_crescent"
-LOCATION_IDS = {
-    "bond_crescent": "1",
-    "corinthian_drive": "2",
-}
+
+def wait_until_target(wait_time: timedelta) -> bool:
+    # If the wait time is more than 61 seconds, exit
+    if wait_time > timedelta(seconds=61):
+        print(f"⚠ wait time exceeds 61 seconds\n")
+        return False
+
+    print("time until project runs: ", str(wait_time))
+    time.sleep(wait_time.total_seconds())  # sleep until the target time
+
+    print(
+        f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}\n"
+    )
+    return True
 
 
 def is_near_target() -> bool:
@@ -37,31 +50,6 @@ def is_near_target() -> bool:
 
     wait_time = run_at - now
     return wait_until_target(wait_time)
-
-
-def wait_until_target(wait_time: timedelta) -> None:
-    # If the wait time is more than 61 seconds, exit
-    if wait_time > timedelta(seconds=61):
-        print(f"⚠ wait time exceeds 61 seconds\n")
-        return False
-
-    print("time until project runs: ", str(wait_time))
-    time.sleep(wait_time.total_seconds())  # sleep until the target time
-
-    print(
-        f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}\n"
-    )
-    return True
-
-
-@dataclass
-class BookingCriteria:
-    date: str
-    start_time: str
-    end_time: str
-    location_id: str
-    location_name: str
-    price: int
 
 
 def fetch_criteria() -> BookingCriteria | None:

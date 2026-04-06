@@ -6,11 +6,49 @@ import re
 import requests
 from dotenv import load_dotenv
 
-from app.utils import BookingCriteria
+# Local Application Imports
+from app.scheduler import BookingCriteria
 
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
+
+
+# Helper function: clean and filter court schedule data based on booking criteria
+def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
+    # Extract stadium specific court availability
+    data = data["data"][criteria.location_id]["courts"]
+
+    # Filter courts only within the desired time range
+    if criteria.start_time and criteria.end_time:
+        for court_data in data.values():
+            timetable = court_data["timetable"]
+
+            court_data["timetable"] = [
+                slot
+                for slot in timetable
+                if criteria.start_time <= slot["start_time"] < criteria.end_time
+            ]
+
+    return data
+
+
+# Helper function: extract payment error message from HTML response
+def extract_payment_error(text: str) -> str:
+    if not text:
+        return None
+
+    # Use regex to find the error message within the HTML content
+    match = re.search(
+        r'<div class="text-xl font-bold[^"]*">\s*(.*?)\s*</div>',
+        text,
+        re.IGNORECASE | re.DOTALL,
+    )
+
+    if match:
+        return " ".join(match.group(1).split())
+
+    return None
 
 
 def get_court_schedule(
@@ -33,24 +71,6 @@ def get_court_schedule(
     )
 
     return process_court_schedule(data, criteria)
-
-
-def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
-    # Extract stadium specific court availability
-    data = data["data"][criteria.location_id]["courts"]
-
-    # Filter courts only within the desired time range
-    if criteria.start_time and criteria.end_time:
-        for court_data in data.values():
-            timetable = court_data["timetable"]
-
-            court_data["timetable"] = [
-                slot
-                for slot in timetable
-                if criteria.start_time <= slot["start_time"] < criteria.end_time
-            ]
-
-    return data
 
 
 def find_court(data: dict, date: str, price: int) -> dict | None:
@@ -134,24 +154,6 @@ def book_court(session: requests.Session, booking_info: dict) -> tuple[int, int]
     )  # returns user_id and booking_id as integers
 
 
-# Helper function: extract payment error message from HTML response
-def extract_payment_error(text: str) -> str:
-    if not text:
-        return None
-
-    # Use regex to find the error message within the HTML content
-    match = re.search(
-        r'<div class="text-xl font-bold[^"]*">\s*(.*?)\s*</div>',
-        text,
-        re.IGNORECASE | re.DOTALL,
-    )
-
-    if match:
-        return " ".join(match.group(1).split())
-
-    return None
-
-
 def pay_court(
     session: requests.Session, user_id: int, booking_id: int, count: int
 ) -> None:
@@ -173,7 +175,9 @@ def pay_court(
     return
 
 
-def book_all_available(session, criteria, booking_info):
+def book_all_available(
+    session: requests.Session, criteria: BookingCriteria, booking_info: dict
+):
     count = 1
     while booking_info is not None:
         try:

@@ -1,6 +1,9 @@
+# Standard Library
 import os
-import yaml
+
+# Third-Party Libraries
 import requests
+import yaml
 
 
 def load_config():

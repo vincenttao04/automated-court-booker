@@ -3,8 +3,8 @@ import os
 import time
 
 # Third-Party Libraries
-import requests
 from dotenv import load_dotenv
+import requests
 from requests.adapters import HTTPAdapter
 
 
@@ -37,6 +37,22 @@ def create_session():
     session.headers.update(headers)
 
     return session
+
+
+def fetch_user_detail(session: requests.Session, field: str) -> None:
+    # Fetch request payload
+    url = os.getenv("USER_DATA")
+
+    # Make fetch user detail GET request
+    response = session.get(url, timeout=15)
+    data = response.json()
+
+    # Check if fetch user detail was successful
+    if data.get("status") != "success":
+        raise Exception("FETCH USER DETAIL FAILED")
+
+    print(f"{field}: {data['data'].get(field)}")
+    return
 
 
 def login() -> requests.Session:
@@ -97,20 +113,4 @@ def logout(session: requests.Session) -> None:
         raise Exception("LOGOUT FAILED")
 
     print(f"logout successful: {os.getenv('USER_NUMBER')}\n")
-    return
-
-
-def fetch_user_detail(session: requests.Session, field: str) -> None:
-    # Fetch request payload
-    url = os.getenv("USER_DATA")
-
-    # Make fetch user detail GET request
-    response = session.get(url, timeout=15)
-    data = response.json()
-
-    # Check if fetch user detail was successful
-    if data.get("status") != "success":
-        raise Exception("FETCH USER DETAIL FAILED")
-
-    print(f"{field}: {data['data'].get(field)}")
     return
