@@ -28,7 +28,7 @@ pip install -r requirements.txt -t package
 
 Write-Host "Copying project files..."
 Copy-Item -Recurse app package/
-Copy-Item main.py, handler.py, config_loader.py, config.yaml package/
+Copy-Item main.py, handler.py, config.yaml package/
 
 Write-Host "Removing __pycache__ folders..."
 Get-ChildItem package -Recurse -Directory -Filter "__pycache__" |
