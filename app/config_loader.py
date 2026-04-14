@@ -32,12 +32,11 @@ def load_config():
 
             return yaml.safe_load(content)
         except Exception as error:
-            raise RuntimeError(f"failed to load config from s3/aws: {error}")
-    else:
-        # print("loading local config.yaml") # debug log - can delete after s3 implemented
-        with open("config.yaml", "r") as config_file:  # "r" -> read mode
-            print(
-                "loading config from local file"
-            )  # debug log - can delete after s3 implemented
+            print(f"⚠: failed to load config from s3/aws: {error}")
+            print("falling back to local config.yaml")
+    with open("config.yaml", "r") as config_file:  # "r" -> read mode
+        print(
+            "loading config from local file"
+        )  # debug log - can delete after s3 implemented
 
-            return yaml.safe_load(config_file)
+        return yaml.safe_load(config_file)
