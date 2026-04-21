@@ -1,3 +1,5 @@
+##### NO LONGER IN USE - REPLACED BY CONFIG.JSON #####
+
 price_per_court: 27
 
 # Time must be in "HH:MM" 24-hour format (i.e. "09:00", not "9:00").

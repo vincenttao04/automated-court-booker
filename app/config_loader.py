@@ -1,9 +1,9 @@
 # Standard Library
+import json
 import os
 
 # Third-Party Libraries
 import boto3
-import yaml
 
 
 def load_config():
@@ -12,8 +12,9 @@ def load_config():
 
     - If S3_BUCKET and S3_KEY environment variables exist:
         → Fetch config from S3 using boto3 (authenticated via IAM role).
+        → If S3 fetch fails, falls back to local config.json.
     - Otherwise:
-        → Load local config.yaml file (for development use).
+        → Load local config.json file (for development use).
     """
 
     s3_bucket = os.getenv("S3_BUCKET")
@@ -30,13 +31,13 @@ def load_config():
             response = s3.get_object(Bucket=s3_bucket, Key=s3_key)
             content = response["Body"].read().decode("utf-8")
 
-            return yaml.safe_load(content)
+            return json.loads(content)
         except Exception as error:
             print(f"⚠: failed to load config from s3/aws: {error}")
-            print("falling back to local config.yaml")
-    with open("config.yaml", "r") as config_file:  # "r" -> read mode
+            print("falling back to local config.json")
+    with open("config.json", "r") as config_file:  # "r" -> read mode
         print(
             "loading config from local file"
         )  # debug log - can delete after s3 implemented
 
-        return yaml.safe_load(config_file)
+        return json.load(config_file)
