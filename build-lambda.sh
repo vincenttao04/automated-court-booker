@@ -27,7 +27,7 @@ pip install -r requirements.txt -t package
 
 echo "Copying project files..."
 cp -r app package/
-cp main.py handler.py config.yaml package/
+cp main.py handler.py config.yaml config.json package/
 
 echo "Removing __pycache__ folders..."
 find package -type d -name "__pycache__" -exec rm -rf {} +

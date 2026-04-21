@@ -2,6 +2,12 @@
 
 A Python automation project that books courts at Badminton North Harbour facilities in Auckland, New Zealand. It searches for the longest contiguous available time slots that match user-defined preferences and completes the full booking and payment process end-to-end.
 
+## temp to-dos
+1. update .env.example
+2. change .yaml to json
+3. test, then remove debug comments in config_loader.py
+4. update readme
+
 ## Table of Contents
 
 - [Features](#features)
