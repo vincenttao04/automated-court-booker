@@ -23,9 +23,7 @@ def load_config():
     # Check if CONFIG_URL is set and not empty
     if s3_bucket and s3_key:
         try:
-            print(
-                "loading config from s3/aws"
-            )  # debug log - can delete after s3 implemented
+            print("loading config from s3/aws")
 
             s3 = boto3.client("s3")
             response = s3.get_object(Bucket=s3_bucket, Key=s3_key)
@@ -36,8 +34,6 @@ def load_config():
             print(f"⚠: failed to load config from s3/aws: {error}")
             print("falling back to local config.json")
     with open("config.json", "r") as config_file:  # "r" -> read mode
-        print(
-            "loading config from local file"
-        )  # debug log - can delete after s3 implemented
+        print("loading config from local file")
 
         return json.load(config_file)
