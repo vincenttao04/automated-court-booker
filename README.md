@@ -2,14 +2,9 @@
 
 A Python automation project that books courts at Badminton North Harbour facilities in Auckland, New Zealand. It searches for the longest contiguous available time slots that match user-defined preferences and completes the full booking and payment process end-to-end.
 
-## temp to-dos
-1. update .env.example
-2. change .yaml to json
-3. test, then remove debug comments in config_loader.py
-4. update readme
-
 ## Table of Contents
 
+- [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
   - [Core Language](#core-language)
@@ -29,7 +24,7 @@ A Python automation project that books courts at Badminton North Harbour facilit
   - [Prerequisites](#prerequisites)
   - [Local Development Setup](#local-development-setup)
 - [Configuration](#configuration)
-  - [config.yaml Options](#configyaml-options)
+  - [config.json Options](#configjson-options)
   - [Environment Variables](#environment-variables)
 - [Testing](#testing)
 - [AWS Deployment - Lambda \& EventBridge](#aws-deployment---lambda--eventbridge)
@@ -37,7 +32,8 @@ A Python automation project that books courts at Badminton North Harbour facilit
     - [Build the deployment package](#build-the-deployment-package)
     - [What the scripts do](#what-the-scripts-do)
   - [2. Uploading to AWS Lambda](#2-uploading-to-aws-lambda)
-  - [3. Environment Variables](#3-environment-variables)
+  - [3a. Environment Variables](#3a-environment-variables)
+  - [3b. S3 Configuration Storage](#3b-s3-configuration-storage)
   - [4. Scheduling the Lambda Execution](#4-scheduling-the-lambda-execution)
     - [Scheduler Configuration](#scheduler-configuration)
   - [5. Verifying the Deployment](#5-verifying-the-deployment)
@@ -72,8 +68,9 @@ A Python automation project that books courts at Badminton North Harbour facilit
 ### Key Libraries
 
 - **requests** — Handles HTTP communication with the booking system APIs
-- **PyYAML** — Loads and parses booking preferences from `config.yaml`
+- **boto3** — AWS SDK for Python; used to fetch `config.json` from S3
 - **python-dotenv** — Manages environment variables for credentials and configuration
+- **PyYAML** — Loads and parses booking preferences from `config.yaml` (no longer in use, replaced by `config.json`)
 
 ### Time & Date Handling
 
@@ -85,7 +82,8 @@ A Python automation project that books courts at Badminton North Harbour facilit
 
 ### Configuration Tools
 
-- **YAML** — Human-readable configuration for schedules, locations, and preferences
+- **JSON** & YAML — Human-readable configuration for schedules, locations, and preferences
+- **AWS S3** — Remote config storage; allows preferences to be updated without redeployment
 - **Environment Variables** — Secure handling of credentials and deployment settings
 
 ### Deployment
@@ -117,7 +115,7 @@ The project uses a sliding-window-style approach to find optimal court slots:
 ### Local Execution Flow
 
 1. **Date Calculation**: Determines the booking date up to three weeks in advance using the Pacific/Auckland timezone
-2. **Config Loading**: Loads booking criteria from `config.yaml` (or a remote URL if configured)
+2. **Config Loading**: Loads booking criteria from `config.json` locally, or fetches it from AWS S3 if `S3_BUCKET` and `S3_KEY` environment variables are set
 3. **Schedule Check**: Checks whether booking criteria is set for the calculated day of the week
 4. **Public Schedule Fetch**: Retrieves the day-specific court schedule using an unauthenticated session to check for court availability before logging in
 5. **Court Selection**: Identifies the longest contiguous available time slot within user-defined start and end times ([Booking Algorithm](#booking-algorithm))
@@ -149,7 +147,7 @@ This automated process runs once per day without any manual intervention.
 automated-court-booker/
 ├── app/
 │   ├── booking.py           # Court availability, optimisation, booking, and payment logic
-│   ├── config_loader.py     # YAML config loader (local file or remote S3 URL)
+│   ├── config_loader.py     # JSON config loader (local file or remote S3 via boto3)
 │   ├── constants.py         # Shared constants (timezone, defaults, location IDs)
 │   ├── models.py            # BookingCriteria dataclass
 │   ├── scheduler.py         # Timing logic and booking criteria resolution
@@ -163,7 +161,7 @@ automated-court-booker/
 │
 ├── build-lambda.ps1         # PowerShell script to build the Lambda deployment package
 ├── build-lambda.sh          # Bash script to build the Lambda deployment package
-├── config.yaml              # Booking preferences (local dev)
+├── config.json              # Booking preferences (local development fallback)
 ├── handler.py               # AWS Lambda entry point
 ├── main.py                  # Main application entry point
 ├── requirements.txt         # Production / AWS Lambda dependencies
@@ -238,31 +236,31 @@ automated-court-booker/
    ## API Endpoints (already configured)
 
    ## Optional: Remote config (for AWS Lambda deployment)
-   CONFIG_URL = ""
+   S3_BUCKET = ""
+   S3_KEY = ""
    ```
 
 5. **Configure booking preferences**
 
-   Edit `config.yaml` to define your booking schedule and preferences
+   Edit `config.json` to define your booking schedule and preferences
 
-   ```yaml
-   price_per_court: 27
-
-   # Weekly schedule (time in 24-hour format: "HH:MM")
-   # Default location: bond_crescent
-   schedule:
-     monday: null
-     tuesday: null
-     wednesday:
-       start: "19:00"
-       end: "21:00"
-     thursday: null
-     friday: null
-     saturday: null
-     sunday:
-       start: "12:00"
-       end: "19:00"
-       location: "corinthian_drive" # override default location
+   ```json
+   {
+     "price_per_court": 27,
+     "schedule": {
+       "monday": null,
+       "tuesday": null,
+       "wednesday": { "start": "19:00", "end": "21:00" },
+       "thursday": null,
+       "friday": null,
+       "saturday": null,
+       "sunday": {
+         "start": "12:00",
+         "end": "19:00",
+         "location": "corinthian_drive"
+       }
+     }
+   }
    ```
 
 6. **Run the application**
@@ -272,7 +270,7 @@ automated-court-booker/
 
 ## Configuration
 
-### config.yaml Options
+### config.json Options
 
 | Field                     | Type      | Description                                     | Required |
 | ------------------------- | --------- | ----------------------------------------------- | -------- |
@@ -298,7 +296,8 @@ See `.env.example` for all required variables. Key variables:
 
 - `USER_NUMBER`: Your Badminton North Harbour account user number
 - `USER_PASSWORD`: Your Badminton North Harbour account user password
-- `CONFIG_URL`: (Optional) Remote YAML config URL for AWS Lambda deployment
+- `S3_BUCKET`: (Optional) S3 bucket name where `config.json` is stored
+- `S3_KEY`: (Optional) S3 object key for the config file (e.g. `config.json`)
 
 ## Testing
 
@@ -371,7 +370,7 @@ Both scripts perform the same operations:
 1. Clean old artifacts (removes existing `package/` directory and `lambda.zip`)
 2. Create a fresh `package/` directory
 3. Install Python dependencies from `requirements.txt` into `package/`
-4. Copy project files (`app/`, `main.py`, `handler.py`, `config.yaml`) to `package/`
+4. Copy project files (`app/`, `main.py`, `handler.py`, `config.yaml`, `config.json`) to `package/`
 5. Remove `__pycache__` folders and `bin/` directory (reduces ZIP size)
 6. Create `lambda.zip` with the packaged application
 
@@ -394,7 +393,7 @@ After running either script, `lambda.zip` will be created in the project root an
 
 This project uses ZIP-based deployment. Inline code edits in the AWS console may not save and deploy correctly.
 
-### 3. Environment Variables
+### 3a. Environment Variables
 
 In production, the Lambda function does not use the `.env` file. The `.env` file is used only for local development. All secrets and endpoints must be provided via AWS Lambda Environment Variables.
 
@@ -421,8 +420,24 @@ PAYMENT_URL
 **Optional variables:**
 
 ```
-CONFIG_URL  # S3 URL for hosted config.yaml (if using remote config)
+S3_BUCKET  # S3 bucket name containing config.json
+S3_KEY     # S3 object key for the config file (e.g. config.json)
 ```
+
+### 3b. S3 Configuration Storage
+
+Configuration is stored in an AWS S3 bucket, allowing preferences to be updated without redeploying the Lambda function. On each invocation, Lambda fetches the latest `config.json` directly from S3. If the fetch fails, it falls back to the bundled local `config.json`.
+
+**To update preferences, using guest access:**
+
+A restricted IAM user (`court-guest`) exists with scoped permissions to read and overwrite `config.json` in this bucket only. This allows a non-technical user to update booking preferences via the AWS Console without access to any other AWS resources.
+
+IAM permissions granted to `court-guest`:
+
+- `s3:ListAllMyBuckets` — allows navigating to the S3 console
+- `s3:ListBucket` — allows viewing the contents of the config bucket
+- `s3:GetObject` — allows downloading `config.json`
+- `s3:PutObject` — allows uploading/replacing `config.json`
 
 ### 4. Scheduling the Lambda Execution
 
@@ -516,6 +531,9 @@ This project runs well within AWS free tier limits:
 - Lambda invocations: ~30/month (Free tier: 1M requests/month)
 - Compute time: ~90 seconds/month (Free tier: 400,000 GB-seconds/month)
 - EventBridge rules: 1 rule (Free tier: Always free for rules)
+- S3 storage: < 1 MB (Free tier: 5 GB/month)
+- S3 GET requests: ~30/month (Free tier: 20,000/month)
+- S3 PUT requests: occasional/month (Free tier: 2,000/month)
 
 Under normal usage, the deployment should incur no AWS charges and stay well within the free tier.
 
@@ -530,7 +548,7 @@ Under normal usage, the deployment should incur no AWS charges and stay well wit
 
 **"No available courts found"**
 
-- Adjust the preferred time range in `config.yaml`
+- Adjust the preferred time range in `config.json`
 - Check whether courts are already fully booked for the target date
 - Verify the configured location is correct
 
