@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 # Local Application Imports
 from app.scheduler import BookingCriteria
 
-
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
 
@@ -132,6 +131,55 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
     print(
         f"{booking_info['court_name'].lower()}, between {booking_info['start_time']} and {booking_info['end_time']}\n"
     )
+
+    return booking_info
+
+
+def find_court_2(data: dict, date: str, price: int) -> dict | None:
+    booking_info = {
+        "booking_id": "",
+        "date": date,
+        "gst": "",
+        "subtotal": "",
+        "total": "",
+        "user_id": "",
+        "member_count": 0,
+        "member_total": "",
+        "non_member_count": 0,
+        "non_member_total": "",
+        # Remaining values to be filled in this function
+        "court_id": None,
+        "court_name": "",
+        "start_time": "",
+        "end_time": "",
+        "price": None,
+    }
+    best_length = 0
+
+    for court_number, court_info in data.items():
+        current_length = 0
+        current_start = None
+        court_name = court_info["court"][
+            "name"
+        ]  # note court_id and court_name mistmatch for corinthian_drive
+
+        for slot in court_info["timetable"]:
+            if slot["status"] == "Available":
+                if current_length == 0:
+                    current_start = slot["start_time"]
+                current_length += 1
+            else:
+                if current_length > best_length:
+                    booking_info.update(
+                        {
+                            "court_id": court_number,
+                            "court_name": court_name,
+                            "start_time": current_start,
+                            "end_time": slot["end_time"],
+                        }
+                    )
+                    best_length = current_length
+                break
 
     return booking_info
 
