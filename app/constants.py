@@ -11,3 +11,4 @@ LOCATION_IDS = {
     "bond_crescent": "1",
     "corinthian_drive": "2",
 }
+DEFAULT_PRIORITY = "earliest"

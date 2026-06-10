@@ -6,13 +6,14 @@ from zoneinfo import ZoneInfo
 # Local Application Imports
 from app.config_loader import load_config
 from app.constants import (
-    DEFAULT_END,
-    DEFAULT_LOCATION,
-    DEFAULT_START,
-    LOCATION_IDS,
     NZ_TZ,
     TARGET_TIME,
     WEEKS_IN_ADVANCE,
+    DEFAULT_START,
+    DEFAULT_END,
+    DEFAULT_LOCATION,
+    LOCATION_IDS,
+    DEFAULT_PRIORITY,
 )
 from app.models import BookingCriteria
 
@@ -71,15 +72,14 @@ def fetch_criteria() -> BookingCriteria | None:
         print(f"no booking scheduled for {day}")
         return None
 
+    location_name = day_schedule.get("location", DEFAULT_LOCATION)
+
     return BookingCriteria(
         date=date,
         start_time=day_schedule.get("start", DEFAULT_START),
         end_time=day_schedule.get("end", DEFAULT_END),
-        location_id=LOCATION_IDS[day_schedule.get("location", DEFAULT_LOCATION)],
-        location_name=(
-            "bond_crescent"
-            if day_schedule.get("location", DEFAULT_LOCATION) == "bond_crescent"
-            else "corinthian_drive"
-        ),
+        location_id=LOCATION_IDS[location_name],
+        location_name=location_name,
+        priority=day_schedule.get("priority", DEFAULT_PRIORITY),
         price=config["price_per_court"] or 27,
     )

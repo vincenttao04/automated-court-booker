@@ -9,4 +9,5 @@ class BookingCriteria:
     end_time: str
     location_id: str
     location_name: str
+    priority: str
     price: int
