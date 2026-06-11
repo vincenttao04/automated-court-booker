@@ -155,39 +155,41 @@ def find_court_2(data: dict, date: str, price: int) -> dict | None:
         "price": None,
     }
     best_length = 0
-    available_courts = []
 
     for court_number, court_info in data.items():
-        if court_info["timetable"][0]["status"] == "Available":
-            available_courts.append(court_number)
+        timetable = court_info["timetable"]
 
-    for court_number in available_courts:
-            court_info = data[court_number]
+        # Court must be available at the beginning of the search window
+        if timetable[0]["status"] != "Available":
+            continue
 
-            current_length = 0
-            current_start = None
-            court_name = court_info["court"][
-                "name"
-            ]  # note court_id and court_name mistmatch for corinthian_drive
+        current_length = 0
+        court_name = court_info["court"][
+            "name"
+        ]  # note court_id and court_name mistmatch for corinthian_drive
 
-            for slot in court_info["timetable"]:
-                if slot["status"] == "Available":
-                    if current_length == 0:
-                        current_start = slot["start_time"]
-                    current_length += 1
+        start_time = timetable[0]["start_time"]
+        end_time = start_time
 
-                    if current_length > best_length:
-                        booking_info.update(
-                            {
-                                "court_id": court_number,
-                                "court_name": court_name,
-                                "start_time": current_start,
-                                "end_time": slot["end_time"],
-                            }
-                        )
-                        best_length = current_length
-                else:
-                    break
+        # Count contiguous availability from the start of the timetable
+        for slot in timetable:
+            if slot["status"] != "Available":
+                break
+
+            current_length += 1
+            end_time = slot["end_time"]
+
+        if current_length > best_length:
+            best_length = current_length
+
+            booking_info.update(
+                {
+                    "court_id": court_number,
+                    "court_name": court_name,
+                    "start_time": start_time,
+                    "end_time": end_time,
+                }
+            )
 
     # Check if any court availability was found
     if best_length == 0:
