@@ -155,31 +155,51 @@ def find_court_2(data: dict, date: str, price: int) -> dict | None:
         "price": None,
     }
     best_length = 0
+    available_courts = []
 
     for court_number, court_info in data.items():
-        current_length = 0
-        current_start = None
-        court_name = court_info["court"][
-            "name"
-        ]  # note court_id and court_name mistmatch for corinthian_drive
+        if court_info["timetable"][0]["status"] == "Available":
+            available_courts.append(court_number)
 
-        for slot in court_info["timetable"]:
-            if slot["status"] == "Available":
-                if current_length == 0:
-                    current_start = slot["start_time"]
-                current_length += 1
-            else:
-                if current_length > best_length:
-                    booking_info.update(
-                        {
-                            "court_id": court_number,
-                            "court_name": court_name,
-                            "start_time": current_start,
-                            "end_time": slot["end_time"],
-                        }
-                    )
-                    best_length = current_length
-                break
+    for court_number in available_courts:
+            court_info = data[court_number]
+
+            current_length = 0
+            current_start = None
+            court_name = court_info["court"][
+                "name"
+            ]  # note court_id and court_name mistmatch for corinthian_drive
+
+            for slot in court_info["timetable"]:
+                if slot["status"] == "Available":
+                    if current_length == 0:
+                        current_start = slot["start_time"]
+                    current_length += 1
+
+                    if current_length > best_length:
+                        booking_info.update(
+                            {
+                                "court_id": court_number,
+                                "court_name": court_name,
+                                "start_time": current_start,
+                                "end_time": slot["end_time"],
+                            }
+                        )
+                        best_length = current_length
+                else:
+                    break
+
+    # Check if any court availability was found
+    if best_length == 0:
+        print("no available courts found\n")
+        return None
+
+    booking_info["price"] = best_length * price
+
+    print(f"longest availability: {best_length} slots/hours")
+    print(
+        f"{booking_info['court_name'].lower()}, between {booking_info['start_time']} and {booking_info['end_time']}\n"
+    )
 
     return booking_info
 
