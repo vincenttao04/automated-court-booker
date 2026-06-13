@@ -1,5 +1,5 @@
 # Local Application Imports
-from app.booking import book_all_available, find_court, get_court_schedule
+from app.booking import book_all_available, identify_courts, get_court_schedule
 from app.scheduler import fetch_criteria, is_near_target
 from app.user import create_session, login, logout
 
@@ -11,7 +11,7 @@ def main():
     if criteria is not None:
         public_session = create_session()
         public_schedule = get_court_schedule(public_session, criteria)
-        booking_info = find_court(public_schedule, criteria.date, criteria.price)
+        booking_info = identify_courts(public_schedule, criteria)
 
         if booking_info is None:
             print("================= FINISH =================")

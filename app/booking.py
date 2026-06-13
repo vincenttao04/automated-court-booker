@@ -50,6 +50,16 @@ def extract_payment_error(text: str) -> str:
     return None
 
 
+# Helper function: identify courts based on user's priority preference
+def identify_courts(data: dict, critera: BookingCriteria) -> dict | None:
+    if critera.priority == "longest":
+        return identify_longest_courts(data, critera.date, critera.price)
+    elif critera.priority == "earliest":
+        return identify_earliest_courts(data, critera.date, critera.price)
+    else:
+        raise ValueError("Invalid booking strategy specified in criteria")
+
+
 def get_court_schedule(
     session: requests.Session,
     criteria: BookingCriteria,
@@ -72,7 +82,7 @@ def get_court_schedule(
     return process_court_schedule(data, criteria)
 
 
-def find_court(data: dict, date: str, price: int) -> dict | None:
+def identify_longest_courts(data: dict, date: str, price: int) -> dict | None:
     booking_info = {
         "booking_id": "",
         "date": date,
@@ -135,7 +145,7 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
     return booking_info
 
 
-def find_court_2(data: dict, date: str, price: int) -> dict | None:
+def identify_earliest_courts(data: dict, date: str, price: int) -> dict | None:
     booking_info = {
         "booking_id": "",
         "date": date,
@@ -246,7 +256,7 @@ def pay_court(
 
 
 def book_all_available(
-    session: requests.Session, criteria: BookingCriteria, booking_info: dict
+    session: requests.Session, criteria: BookingCriteria, booking_info: dict | None
 ):
     count = 1
     while booking_info is not None:
@@ -254,7 +264,7 @@ def book_all_available(
             user_id, booking_id = book_court(session, booking_info)
             pay_court(session, user_id, booking_id, count)
             schedule = get_court_schedule(session, criteria)
-            booking_info = find_court(schedule, criteria.date, criteria.price)
+            booking_info = identify_courts(schedule, criteria)
             count += 1
         except Exception as e:
             print(f"Error: {e}")
