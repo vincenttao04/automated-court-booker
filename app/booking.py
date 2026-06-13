@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 # Local Application Imports
 from app.scheduler import BookingCriteria
+from constants import Priority
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -52,12 +53,10 @@ def extract_payment_error(text: str) -> str:
 
 # Helper function: identify courts based on user's priority preference
 def identify_courts(data: dict, critera: BookingCriteria) -> dict | None:
-    if critera.priority == "longest":
+    if critera.priority == Priority.LONGEST:
         return identify_longest_courts(data, critera.date, critera.price)
-    elif critera.priority == "earliest":
-        return identify_earliest_courts(data, critera.date, critera.price)
     else:
-        raise ValueError("Invalid booking strategy specified in criteria")
+        return identify_earliest_courts(data, critera.date, critera.price)
 
 
 def get_court_schedule(

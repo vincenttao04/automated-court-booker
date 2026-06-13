@@ -1,6 +1,9 @@
 # Standard Library
 from dataclasses import dataclass
 
+# Local Application Imports
+from constants import Priority
+
 
 @dataclass
 class BookingCriteria:
@@ -9,5 +12,5 @@ class BookingCriteria:
     end_time: str
     location_id: str
     location_name: str
-    priority: str
+    priority: Priority
     price: int
