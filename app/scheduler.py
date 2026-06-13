@@ -16,6 +16,7 @@ from app.constants import (
     DEFAULT_PRIORITY,
 )
 from app.models import BookingCriteria
+from constants import Priority
 
 
 def wait_until_target(wait_time: timedelta) -> bool:
@@ -80,6 +81,6 @@ def fetch_criteria() -> BookingCriteria | None:
         end_time=day_schedule.get("end", DEFAULT_END),
         location_id=LOCATION_IDS[location_name],
         location_name=location_name,
-        priority=day_schedule.get("priority", DEFAULT_PRIORITY),
+        priority=Priority(day_schedule.get("priority", DEFAULT_PRIORITY)),
         price=config["price_per_court"] or 27,
     )

@@ -52,11 +52,11 @@ def extract_payment_error(text: str) -> str:
 
 
 # Helper function: identify courts based on user's priority preference
-def identify_courts(data: dict, critera: BookingCriteria) -> dict | None:
-    if critera.priority == Priority.LONGEST:
-        return identify_longest_courts(data, critera.date, critera.price)
+def identify_courts(data: dict, criteria: BookingCriteria) -> dict | None:
+    if criteria.priority == Priority.LONGEST:
+        return identify_longest_courts(data, criteria.date, criteria.price)
     else:
-        return identify_earliest_courts(data, critera.date, critera.price)
+        return identify_earliest_courts(data, criteria.date, criteria.price)
 
 
 def get_court_schedule(
