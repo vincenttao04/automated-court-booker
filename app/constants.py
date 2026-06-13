@@ -9,10 +9,16 @@ WEEKS_IN_ADVANCE = 3
 
 DEFAULT_START = "06:00"
 DEFAULT_END = "23:00"
-DEFAULT_LOCATION = "bond_crescent"
+
+
+class Location(StrEnum):
+    BOND_CRESCENT = "bond_crescent"
+    CORINTHIAN_DRIVE = "corinthian_drive"
+
+
 LOCATION_IDS = {
-    "bond_crescent": "1",
-    "corinthian_drive": "2",
+    Location.BOND_CRESCENT: "1",
+    Location.CORINTHIAN_DRIVE: "2",
 }
 
 
@@ -21,4 +27,5 @@ class Priority(StrEnum):
     LONGEST = "longest"
 
 
+DEFAULT_LOCATION = Location.BOND_CRESCENT
 DEFAULT_PRIORITY = Priority.EARLIEST

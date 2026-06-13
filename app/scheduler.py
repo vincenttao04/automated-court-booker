@@ -12,11 +12,10 @@ from app.constants import (
     DEFAULT_START,
     DEFAULT_END,
     DEFAULT_LOCATION,
-    LOCATION_IDS,
     DEFAULT_PRIORITY,
 )
 from app.models import BookingCriteria
-from constants import Priority
+from constants import Location, Priority
 
 
 def wait_until_target(wait_time: timedelta) -> bool:
@@ -73,14 +72,11 @@ def fetch_criteria() -> BookingCriteria | None:
         print(f"no booking scheduled for {day}")
         return None
 
-    location_name = day_schedule.get("location", DEFAULT_LOCATION)
-
     return BookingCriteria(
         date=date,
         start_time=day_schedule.get("start", DEFAULT_START),
         end_time=day_schedule.get("end", DEFAULT_END),
-        location_id=LOCATION_IDS[location_name],
-        location_name=location_name,
+        location=Location(day_schedule.get("location", DEFAULT_LOCATION)),
         priority=Priority(day_schedule.get("priority", DEFAULT_PRIORITY)),
         price=config["price_per_court"] or 27,
     )
