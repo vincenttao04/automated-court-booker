@@ -53,10 +53,7 @@ def extract_payment_error(text: str) -> str:
 
 # Helper function: identify courts based on user's priority preference
 def identify_courts(data: dict, criteria: BookingCriteria) -> dict | None:
-    if criteria.priority == Priority.LONGEST:
-        return identify_longest_courts(data, criteria.date, criteria.price)
-    else:
-        return identify_earliest_courts(data, criteria.date, criteria.price)
+    return PRIORITY_HANDLER[criteria.priority](data, criteria.date, criteria.price)
 
 
 def get_court_schedule(
@@ -213,6 +210,12 @@ def identify_earliest_courts(data: dict, date: str, price: int) -> dict | None:
     )
 
     return booking_info
+
+
+PRIORITY_HANDLER = {
+    Priority.EARLIEST: identify_earliest_courts,
+    Priority.LONGEST: identify_longest_courts,
+}
 
 
 def book_court(session: requests.Session, booking_info: dict) -> tuple[int, int]:
