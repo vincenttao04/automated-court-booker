@@ -5,6 +5,7 @@ import re
 # Third-Party Libraries
 import requests
 from dotenv import load_dotenv
+from dataclasses import asdict
 
 # Local Application Imports
 from app.scheduler import BookingCriteria
@@ -182,12 +183,14 @@ PRIORITY_HANDLER = {
 }
 
 
-def book_court(session: requests.Session, booking_info: dict) -> tuple[int, int]:
+def book_court(
+    session: requests.Session, booking_info: BookingInformation
+) -> tuple[int, int]:
     # Fetch request_one payload
     url = os.getenv("BOOKING_URL")
 
     # Make booking_create POST request
-    response = session.post(url, json=booking_info, timeout=15)
+    response = session.post(url, json=asdict(booking_info), timeout=15)
     data = response.json()
 
     # Check if booking_create was successful
@@ -222,7 +225,9 @@ def pay_court(
 
 
 def book_all_available(
-    session: requests.Session, criteria: BookingCriteria, booking_info: dict | None
+    session: requests.Session,
+    criteria: BookingCriteria,
+    booking_info: BookingInformation | None,
 ):
     count = 1
     while booking_info is not None:
