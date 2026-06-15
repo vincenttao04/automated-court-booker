@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 # Local Application Imports
 from app.scheduler import BookingCriteria
 from constants import Priority
+from models import BookingInformation
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -52,7 +53,7 @@ def extract_payment_error(text: str) -> str:
 
 
 # Helper function: identify courts based on user's priority preference
-def identify_courts(data: dict, criteria: BookingCriteria) -> dict | None:
+def identify_courts(data: dict, criteria: BookingCriteria) -> BookingInformation | None:
     return PRIORITY_HANDLER[criteria.priority](data, criteria.date, criteria.price)
 
 
@@ -78,30 +79,15 @@ def get_court_schedule(
     return process_court_schedule(data, criteria)
 
 
-def identify_longest_courts(data: dict, date: str, price: int) -> dict | None:
-    booking_info = {
-        "booking_id": "",
-        "date": date,
-        "gst": "",
-        "subtotal": "",
-        "total": "",
-        "user_id": "",
-        "member_count": 0,
-        "member_total": "",
-        "non_member_count": 0,
-        "non_member_total": "",
-        # Remaining values to be filled in this function
-        "court_id": None,
-        "court_name": "",
-        "start_time": "",
-        "end_time": "",
-        "price": None,
-    }
+def identify_longest_courts(
+    data: dict, date: str, price: int
+) -> BookingInformation | None:
+    booking_info = BookingInformation(date)
     best_length = 0
 
     for court_number, court_info in data.items():
         current_length = 0
-        current_start = None
+        current_start = ""
         court_name = court_info["court"][
             "name"
         ]  # note court_id and court_name mistmatch for corinthian_drive
@@ -113,53 +99,35 @@ def identify_longest_courts(data: dict, date: str, price: int) -> dict | None:
                 current_length += 1
 
                 if current_length > best_length:
-                    booking_info.update(
-                        {
-                            "court_id": court_number,
-                            "court_name": court_name,
-                            "start_time": current_start,
-                            "end_time": slot["end_time"],
-                        }
-                    )
+                    booking_info.court_id = court_number
+                    booking_info.court_name = court_name
+                    booking_info.start_time = current_start
+                    booking_info.end_time = slot["end_time"]
+
                     best_length = current_length
             else:
                 current_length = 0
-                current_start = None
+                current_start = ""
 
     # Check if any court availability was found
     if best_length == 0:
         print("no available courts found\n")
         return None
 
-    booking_info["price"] = best_length * price
+    booking_info.price = best_length * price
 
     print(f"longest availability: {best_length} slots/hours")
     print(
-        f"{booking_info['court_name'].lower()}, between {booking_info['start_time']} and {booking_info['end_time']}\n"
+        f"{booking_info.court_name.lower()}, between {booking_info.start_time} and {booking_info.end_time}\n"
     )
 
     return booking_info
 
 
-def identify_earliest_courts(data: dict, date: str, price: int) -> dict | None:
-    booking_info = {
-        "booking_id": "",
-        "date": date,
-        "gst": "",
-        "subtotal": "",
-        "total": "",
-        "user_id": "",
-        "member_count": 0,
-        "member_total": "",
-        "non_member_count": 0,
-        "non_member_total": "",
-        # Remaining values to be filled in this function
-        "court_id": None,
-        "court_name": "",
-        "start_time": "",
-        "end_time": "",
-        "price": None,
-    }
+def identify_earliest_courts(
+    data: dict, date: str, price: int
+) -> BookingInformation | None:
+    booking_info = BookingInformation(date)
     best_length = 0
 
     for court_number, court_info in data.items():
@@ -186,27 +154,23 @@ def identify_earliest_courts(data: dict, date: str, price: int) -> dict | None:
             end_time = slot["end_time"]
 
         if current_length > best_length:
-            best_length = current_length
+            booking_info.court_id = court_number
+            booking_info.court_name = court_name
+            booking_info.start_time = start_time
+            booking_info.end_time = end_time
 
-            booking_info.update(
-                {
-                    "court_id": court_number,
-                    "court_name": court_name,
-                    "start_time": start_time,
-                    "end_time": end_time,
-                }
-            )
+            best_length = current_length
 
     # Check if any court availability was found
     if best_length == 0:
         print("no available courts found\n")
         return None
 
-    booking_info["price"] = best_length * price
+    booking_info.price = best_length * price
 
     print(f"longest availability: {best_length} slots/hours")
     print(
-        f"{booking_info['court_name'].lower()}, between {booking_info['start_time']} and {booking_info['end_time']}\n"
+        f"{booking_info.court_name.lower()}, between {booking_info.start_time} and {booking_info.end_time}\n"
     )
 
     return booking_info
