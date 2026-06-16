@@ -1,16 +1,15 @@
 # Standard Library
 import os
 import re
+from dataclasses import asdict
 
 # Third-Party Libraries
 import requests
 from dotenv import load_dotenv
-from dataclasses import asdict
 
 # Local Application Imports
-from app.scheduler import BookingCriteria
 from constants import Priority
-from models import BookingInformation
+from models import BookingCriteria, BookingInformation
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()

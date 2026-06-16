@@ -21,11 +21,12 @@ LOCATION_IDS = {
     Location.CORINTHIAN_DRIVE: "2",
 }
 
+DEFAULT_LOCATION = Location.BOND_CRESCENT
+
 
 class Priority(StrEnum):
     EARLIEST = "earliest"
     LONGEST = "longest"
 
 
-DEFAULT_LOCATION = Location.BOND_CRESCENT
 DEFAULT_PRIORITY = Priority.EARLIEST

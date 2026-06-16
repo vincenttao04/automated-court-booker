@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 # Local Application Imports
-from constants import Location, LOCATION_IDS, Priority
+from constants import LOCATION_IDS, Location, Priority
 
 
 @dataclass

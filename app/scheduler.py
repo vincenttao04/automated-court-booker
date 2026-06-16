@@ -4,18 +4,19 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 # Local Application Imports
-from app.config_loader import load_config
-from app.constants import (
-    NZ_TZ,
-    TARGET_TIME,
-    WEEKS_IN_ADVANCE,
-    DEFAULT_START,
+from config_loader import load_config
+from constants import (
     DEFAULT_END,
     DEFAULT_LOCATION,
     DEFAULT_PRIORITY,
+    DEFAULT_START,
+    Location,
+    NZ_TZ,
+    Priority,
+    TARGET_TIME,
+    WEEKS_IN_ADVANCE,
 )
-from app.models import BookingCriteria
-from constants import Location, Priority
+from models import BookingCriteria
 
 
 def wait_until_target(wait_time: timedelta) -> bool:
