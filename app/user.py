@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 import requests
 from requests.adapters import HTTPAdapter
 
-
 DEVICE_ID = "Badminton-Test-ABC-001"
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
@@ -42,6 +41,8 @@ def create_session():
 def fetch_user_detail(session: requests.Session, field: str) -> None:
     # Fetch request payload
     url = os.getenv("USER_DATA")
+    if not url:
+        raise RuntimeError("Fetch User Detail: Missing env variables")
 
     # Make fetch user detail GET request
     response = session.get(url, timeout=15)
@@ -58,13 +59,15 @@ def fetch_user_detail(session: requests.Session, field: str) -> None:
 def login() -> requests.Session:
     # Fetch request payload
     url = os.getenv("LOGIN_URL")
+    user_number = os.getenv("USER_NUMBER")
+    user_password = os.getenv("USER_PASSWORD")
 
-    if not os.getenv("USER_NUMBER") or not os.getenv("USER_PASSWORD"):
-        raise RuntimeError("Missing USER_NUMBER or USER_PASSWORD env variables")
+    if not url or not user_number or not user_password:
+        raise RuntimeError("Login: Missing env variables")
 
     payload = {
-        "number": os.getenv("USER_NUMBER"),
-        "password": os.getenv("USER_PASSWORD"),
+        "number": user_number,
+        "password": user_password,
         "device_id": DEVICE_ID,
     }
 
@@ -86,7 +89,7 @@ def login() -> requests.Session:
         }
     )
 
-    print(f"login successful: {os.getenv('USER_NUMBER')}")
+    print(f"login successful: {user_number}")
     fetch_user_detail(session, "credit_balance")
     print("")
 
@@ -102,6 +105,9 @@ def logout(session: requests.Session) -> None:
 
     # Fetch request payload
     url = os.getenv("LOGOUT_URL")
+    if not url:
+        raise RuntimeError("Logout: Missing env variables")
+
     payload = {"device_id": DEVICE_ID}
 
     # Make logout POST request

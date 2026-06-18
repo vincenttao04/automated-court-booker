@@ -35,7 +35,7 @@ def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
 
 
 # Helper function: extract payment error message from HTML response
-def extract_payment_error(text: str) -> str:
+def extract_payment_error(text: str) -> str | None:
     if not text:
         return None
 
@@ -187,6 +187,8 @@ def book_court(
 ) -> tuple[int, int]:
     # Fetch request_one payload
     url = os.getenv("BOOKING_URL")
+    if not url:
+        raise RuntimeError("Book Court: Missing env variables")
 
     # Make booking_create POST request
     response = session.post(url, json=asdict(booking_info), timeout=15)
