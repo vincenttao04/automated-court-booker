@@ -8,8 +8,8 @@ import requests
 from dotenv import load_dotenv
 
 # Local Application Imports
-from constants import Priority
-from models import BookingCriteria, BookingInformation
+from app.constants import Priority
+from app.models import BookingCriteria, BookingInformation
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -79,6 +79,73 @@ def get_court_schedule(
     return process_court_schedule(data, criteria)
 
 
+def identify_earliest_courts(
+    data: dict, date: str, price: int
+) -> BookingInformation | None:
+    search_index = 0
+
+    while True:
+        found_available = False
+
+        for court_info in data.values():
+            if court_info["timetable"][search_index]["status"] == "Available":
+                found_available = True
+                break
+
+        if found_available:
+            break
+
+        search_index += 1
+
+    booking_info = BookingInformation(date)
+    best_length = 0
+
+    for court_number, court_info in data.items():
+        timetable = court_info["timetable"]
+
+        # Court must be available at the beginning of the search window
+        if timetable[search_index]["status"] != "Available":
+            continue
+
+        current_length = 0
+        court_name = court_info["court"][
+            "name"
+        ]  # note court_id and court_name mistmatch for corinthian_drive
+
+        start_time = timetable[search_index]["start_time"]
+        end_time = start_time
+
+        # Count contiguous availability from the start of the timetable
+        for slot in timetable[search_index:]:
+            if slot["status"] != "Available":
+                break
+
+            current_length += 1
+            end_time = slot["end_time"]
+
+        if current_length > best_length:
+            booking_info.court_id = court_number
+            booking_info.court_name = court_name
+            booking_info.start_time = start_time
+            booking_info.end_time = end_time
+
+            best_length = current_length
+
+    # Check if any court availability was found
+    if best_length == 0:
+        print("no available courts found\n")
+        return None
+
+    booking_info.price = best_length * price
+
+    print(f"longest availability: {best_length} slots/hours")
+    print(
+        f"{booking_info.court_name.lower()}, between {booking_info.start_time} and {booking_info.end_time}\n"
+    )
+
+    return booking_info
+
+
 def identify_longest_courts(
     data: dict, date: str, price: int
 ) -> BookingInformation | None:
@@ -108,58 +175,6 @@ def identify_longest_courts(
             else:
                 current_length = 0
                 current_start = ""
-
-    # Check if any court availability was found
-    if best_length == 0:
-        print("no available courts found\n")
-        return None
-
-    booking_info.price = best_length * price
-
-    print(f"longest availability: {best_length} slots/hours")
-    print(
-        f"{booking_info.court_name.lower()}, between {booking_info.start_time} and {booking_info.end_time}\n"
-    )
-
-    return booking_info
-
-
-def identify_earliest_courts(
-    data: dict, date: str, price: int
-) -> BookingInformation | None:
-    booking_info = BookingInformation(date)
-    best_length = 0
-
-    for court_number, court_info in data.items():
-        timetable = court_info["timetable"]
-
-        # Court must be available at the beginning of the search window
-        if timetable[0]["status"] != "Available":
-            continue
-
-        current_length = 0
-        court_name = court_info["court"][
-            "name"
-        ]  # note court_id and court_name mistmatch for corinthian_drive
-
-        start_time = timetable[0]["start_time"]
-        end_time = start_time
-
-        # Count contiguous availability from the start of the timetable
-        for slot in timetable:
-            if slot["status"] != "Available":
-                break
-
-            current_length += 1
-            end_time = slot["end_time"]
-
-        if current_length > best_length:
-            booking_info.court_id = court_number
-            booking_info.court_name = court_name
-            booking_info.start_time = start_time
-            booking_info.end_time = end_time
-
-            best_length = current_length
 
     # Check if any court availability was found
     if best_length == 0:
