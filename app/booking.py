@@ -54,6 +54,7 @@ def extract_payment_error(text: str) -> str | None:
 
 # Helper function: identify courts based on user's priority preference
 def identify_courts(data: dict, criteria: BookingCriteria) -> BookingInformation | None:
+    print("identifying courts based on priority:", criteria.priority.value)
     return PRIORITY_HANDLER[criteria.priority](data, criteria.date, criteria.price)
 
 
@@ -83,8 +84,9 @@ def identify_earliest_courts(
     data: dict, date: str, price: int
 ) -> BookingInformation | None:
     search_index = 0
+    max_slots = len(next(iter(data.values()))["timetable"])
 
-    while True:
+    while search_index < max_slots:
         found_available = False
 
         for court_info in data.values():
@@ -96,6 +98,11 @@ def identify_earliest_courts(
             break
 
         search_index += 1
+
+    # Check if any court availability was found
+    if search_index == max_slots:
+        print("no available courts found\n")
+        return None
 
     booking_info = BookingInformation(date)
     best_length = 0
@@ -130,11 +137,6 @@ def identify_earliest_courts(
             booking_info.end_time = end_time
 
             best_length = current_length
-
-    # Check if any court availability was found
-    if best_length == 0:
-        print("no available courts found\n")
-        return None
 
     booking_info.price = best_length * price
 
