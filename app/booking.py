@@ -1,14 +1,15 @@
 # Standard Library
 import os
 import re
+from dataclasses import asdict
 
 # Third-Party Libraries
 import requests
 from dotenv import load_dotenv
 
 # Local Application Imports
-from app.scheduler import BookingCriteria
-
+from app.constants import Priority
+from app.models import BookingCriteria, BookingInformation
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -34,7 +35,7 @@ def process_court_schedule(data: dict, criteria: BookingCriteria) -> dict:
 
 
 # Helper function: extract payment error message from HTML response
-def extract_payment_error(text: str) -> str:
+def extract_payment_error(text: str) -> str | None:
     if not text:
         return None
 
@@ -49,6 +50,12 @@ def extract_payment_error(text: str) -> str:
         return " ".join(match.group(1).split())
 
     return None
+
+
+# Helper function: identify courts based on user's priority preference
+def identify_courts(data: dict, criteria: BookingCriteria) -> BookingInformation | None:
+    print("identifying courts based on priority:", criteria.priority.value)
+    return PRIORITY_HANDLER[criteria.priority](data, criteria.date, criteria.price)
 
 
 def get_court_schedule(
@@ -73,30 +80,83 @@ def get_court_schedule(
     return process_court_schedule(data, criteria)
 
 
-def find_court(data: dict, date: str, price: int) -> dict | None:
-    booking_info = {
-        "booking_id": "",
-        "date": date,
-        "gst": "",
-        "subtotal": "",
-        "total": "",
-        "user_id": "",
-        "member_count": 0,
-        "member_total": "",
-        "non_member_count": 0,
-        "non_member_total": "",
-        # Remaining values to be filled in this function
-        "court_id": None,
-        "court_name": "",
-        "start_time": "",
-        "end_time": "",
-        "price": None,
-    }
+def identify_earliest_courts(
+    data: dict, date: str, price: int
+) -> BookingInformation | None:
+    search_index = 0
+    max_slots = len(next(iter(data.values()))["timetable"])
+
+    while search_index < max_slots:
+        found_available = False
+
+        for court_info in data.values():
+            if court_info["timetable"][search_index]["status"] == "Available":
+                found_available = True
+                break
+
+        if found_available:
+            break
+
+        search_index += 1
+
+    # Check if any court availability was found
+    if search_index == max_slots:
+        print("no available courts found\n")
+        return None
+
+    booking_info = BookingInformation(date)
+    best_length = 0
+
+    for court_number, court_info in data.items():
+        timetable = court_info["timetable"]
+
+        # Court must be available at the beginning of the search window
+        if timetable[search_index]["status"] != "Available":
+            continue
+
+        current_length = 0
+        court_name = court_info["court"][
+            "name"
+        ]  # note court_id and court_name mistmatch for corinthian_drive
+
+        start_time = timetable[search_index]["start_time"]
+        end_time = start_time
+
+        # Count contiguous availability from the start of the timetable
+        for slot in timetable[search_index:]:
+            if slot["status"] != "Available":
+                break
+
+            current_length += 1
+            end_time = slot["end_time"]
+
+        if current_length > best_length:
+            booking_info.court_id = court_number
+            booking_info.court_name = court_name
+            booking_info.start_time = start_time
+            booking_info.end_time = end_time
+
+            best_length = current_length
+
+    booking_info.price = best_length * price
+
+    print(f"longest availability: {best_length} slots/hours")
+    print(
+        f"{booking_info.court_name.lower()}, between {booking_info.start_time} and {booking_info.end_time}\n"
+    )
+
+    return booking_info
+
+
+def identify_longest_courts(
+    data: dict, date: str, price: int
+) -> BookingInformation | None:
+    booking_info = BookingInformation(date)
     best_length = 0
 
     for court_number, court_info in data.items():
         current_length = 0
-        current_start = None
+        current_start = ""
         court_name = court_info["court"][
             "name"
         ]  # note court_id and court_name mistmatch for corinthian_drive
@@ -108,40 +168,47 @@ def find_court(data: dict, date: str, price: int) -> dict | None:
                 current_length += 1
 
                 if current_length > best_length:
-                    booking_info.update(
-                        {
-                            "court_id": court_number,
-                            "court_name": court_name,
-                            "start_time": current_start,
-                            "end_time": slot["end_time"],
-                        }
-                    )
+                    booking_info.court_id = court_number
+                    booking_info.court_name = court_name
+                    booking_info.start_time = current_start
+                    booking_info.end_time = slot["end_time"]
+
                     best_length = current_length
             else:
                 current_length = 0
-                current_start = None
+                current_start = ""
 
     # Check if any court availability was found
     if best_length == 0:
         print("no available courts found\n")
         return None
 
-    booking_info["price"] = best_length * price
+    booking_info.price = best_length * price
 
     print(f"longest availability: {best_length} slots/hours")
     print(
-        f"{booking_info['court_name'].lower()}, between {booking_info['start_time']} and {booking_info['end_time']}\n"
+        f"{booking_info.court_name.lower()}, between {booking_info.start_time} and {booking_info.end_time}\n"
     )
 
     return booking_info
 
 
-def book_court(session: requests.Session, booking_info: dict) -> tuple[int, int]:
+PRIORITY_HANDLER = {
+    Priority.EARLIEST: identify_earliest_courts,
+    Priority.LONGEST: identify_longest_courts,
+}
+
+
+def book_court(
+    session: requests.Session, booking_info: BookingInformation
+) -> tuple[int, int]:
     # Fetch request_one payload
     url = os.getenv("BOOKING_URL")
+    if not url:
+        raise RuntimeError("Book Court: Missing env variables")
 
     # Make booking_create POST request
-    response = session.post(url, json=booking_info, timeout=15)
+    response = session.post(url, json=asdict(booking_info), timeout=15)
     data = response.json()
 
     # Check if booking_create was successful
@@ -176,7 +243,9 @@ def pay_court(
 
 
 def book_all_available(
-    session: requests.Session, criteria: BookingCriteria, booking_info: dict
+    session: requests.Session,
+    criteria: BookingCriteria,
+    booking_info: BookingInformation | None,
 ):
     count = 1
     while booking_info is not None:
@@ -184,7 +253,7 @@ def book_all_available(
             user_id, booking_id = book_court(session, booking_info)
             pay_court(session, user_id, booking_id, count)
             schedule = get_court_schedule(session, criteria)
-            booking_info = find_court(schedule, criteria.date, criteria.price)
+            booking_info = identify_courts(schedule, criteria)
             count += 1
         except Exception as e:
             print(f"Error: {e}")

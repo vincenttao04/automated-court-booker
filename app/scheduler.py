@@ -8,9 +8,11 @@ from app.config_loader import load_config
 from app.constants import (
     DEFAULT_END,
     DEFAULT_LOCATION,
+    DEFAULT_PRIORITY,
     DEFAULT_START,
-    LOCATION_IDS,
+    Location,
     NZ_TZ,
+    Priority,
     TARGET_TIME,
     WEEKS_IN_ADVANCE,
 )
@@ -75,11 +77,7 @@ def fetch_criteria() -> BookingCriteria | None:
         date=date,
         start_time=day_schedule.get("start", DEFAULT_START),
         end_time=day_schedule.get("end", DEFAULT_END),
-        location_id=LOCATION_IDS[day_schedule.get("location", DEFAULT_LOCATION)],
-        location_name=(
-            "bond_crescent"
-            if day_schedule.get("location", DEFAULT_LOCATION) == "bond_crescent"
-            else "corinthian_drive"
-        ),
+        location=Location(day_schedule.get("location", DEFAULT_LOCATION)),
+        priority=Priority(day_schedule.get("priority", DEFAULT_PRIORITY)),
         price=config["price_per_court"] or 27,
     )

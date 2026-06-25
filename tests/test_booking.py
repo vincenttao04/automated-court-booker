@@ -6,7 +6,7 @@ import time
 import pytest
 
 # Local Application Imports
-from app.booking import find_court
+from app.booking import identify_longest_courts
 
 # Testing variables; adjust according to config
 TEST_PRICE = 27
@@ -292,7 +292,7 @@ def simulate_booking(test_court_data: dict, result: dict | None) -> None:
 def test_find_court_returns_all_available_sequences(test_court_data):
     start_time = time.perf_counter()
 
-    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
+    result = identify_longest_courts(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == "1"
     assert result["court_name"] == "Court 1"
@@ -301,7 +301,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
     assert result["price"] == TEST_PRICE * 4
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
+    result = identify_longest_courts(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == "2"
     assert result["court_name"] == "Court 2"
@@ -310,7 +310,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
     assert result["price"] == TEST_PRICE * 4
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
+    result = identify_longest_courts(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == "3"
     assert result["court_name"] == "Court 3"
@@ -319,7 +319,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
     assert result["price"] == TEST_PRICE * 2
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
+    result = identify_longest_courts(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == "1"
     assert result["court_name"] == "Court 1"
@@ -328,7 +328,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
     assert result["price"] == TEST_PRICE * 1
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
+    result = identify_longest_courts(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == "2"
     assert result["court_name"] == "Court 2"
@@ -337,7 +337,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
     assert result["price"] == TEST_PRICE * 1
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
+    result = identify_longest_courts(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is not None
     assert result["court_id"] == "3"
     assert result["court_name"] == "Court 3"
@@ -346,7 +346,7 @@ def test_find_court_returns_all_available_sequences(test_court_data):
     assert result["price"] == TEST_PRICE * 1
     simulate_booking(test_court_data, result)
 
-    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
+    result = identify_longest_courts(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is None
 
     end_time = time.perf_counter()
@@ -362,7 +362,7 @@ def test_find_court_returns_none_when_no_availability(test_court_data):
             if slot.get("status") == "Available":
                 slot["status"] = "Booked"
 
-    result = find_court(test_court_data, date=TEST_DATE, price=TEST_PRICE)
+    result = identify_longest_courts(test_court_data, date=TEST_DATE, price=TEST_PRICE)
     assert result is None
 
     end_time = time.perf_counter()
