@@ -6,9 +6,9 @@ def test_user_env_variables_exist():
     required_env_variables = [
         "USER_NUMBER",
         "USER_PASSWORD",
-        "LOGIN_URL",
-        "LOGOUT_URL",
-        "USER_DATA",
+        "LOGIN_API",
+        "LOGOUT_API",
+        "USER_DATA_API",
     ]
 
     for var in required_env_variables:

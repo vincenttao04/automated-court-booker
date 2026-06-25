@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 NZ_TZ = ZoneInfo("Pacific/Auckland")  # set NZ timezone
 
 TARGET_TIME = "00:00:00"  # HH:MM:SS, 24-hour format
-WEEKS_IN_ADVANCE = 3
+WEEKS_IN_ADVANCE = 2
 
 DEFAULT_START = "06:00"
 DEFAULT_END = "23:00"

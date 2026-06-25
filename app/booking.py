@@ -63,7 +63,7 @@ def get_court_schedule(
     criteria: BookingCriteria,
 ) -> dict:
     # Fetch request payload
-    url = f"{os.getenv('COURT_SCHEDULE')}{criteria.date}"
+    url = f"{os.getenv('COURT_SCHEDULE_API')}{criteria.date}"
 
     # Make fetch court availability GET request
     response = session.get(url, timeout=15)
@@ -203,7 +203,7 @@ def book_court(
     session: requests.Session, booking_info: BookingInformation
 ) -> tuple[int, int]:
     # Fetch request_one payload
-    url = os.getenv("BOOKING_URL")
+    url = os.getenv("BOOKING_API")
     if not url:
         raise RuntimeError("Book Court: Missing env variables")
 
@@ -225,7 +225,7 @@ def pay_court(
     session: requests.Session, user_id: int, booking_id: int, count: int
 ) -> None:
     # Fetch request payload
-    url = f"{os.getenv('PAYMENT_URL')}{user_id}/{booking_id}"
+    url = f"{os.getenv('PAYMENT_API')}{user_id}/{booking_id}"
 
     # Make court payment GET request; Response Content-Type: text/html; charset=UTF-8
     response = session.get(url, timeout=15)

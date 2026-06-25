@@ -269,7 +269,7 @@ def test_court_data():
 
 
 def test_booking_env_variables_exist():
-    required_env_variables = ["COURT_SCHEDULE", "BOOKING_URL", "PAYMENT_URL"]
+    required_env_variables = ["COURT_SCHEDULE_API", "BOOKING_API", "PAYMENT_API"]
 
     for var in required_env_variables:
         value = os.getenv(var)

@@ -40,7 +40,7 @@ def create_session():
 
 def fetch_user_detail(session: requests.Session, field: str) -> None:
     # Fetch request payload
-    url = os.getenv("USER_DATA")
+    url = os.getenv("USER_DATA_API")
     if not url:
         raise RuntimeError("Fetch User Detail: Missing env variables")
 
@@ -58,7 +58,7 @@ def fetch_user_detail(session: requests.Session, field: str) -> None:
 
 def login() -> requests.Session:
     # Fetch request payload
-    url = os.getenv("LOGIN_URL")
+    url = os.getenv("LOGIN_API")
     user_number = os.getenv("USER_NUMBER")
     user_password = os.getenv("USER_PASSWORD")
 
@@ -104,7 +104,7 @@ def logout(session: requests.Session) -> None:
         time.sleep(10)
 
     # Fetch request payload
-    url = os.getenv("LOGOUT_URL")
+    url = os.getenv("LOGOUT_API")
     if not url:
         raise RuntimeError("Logout: Missing env variables")
 
