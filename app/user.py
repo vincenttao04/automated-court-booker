@@ -6,6 +6,7 @@ import time
 from dotenv import load_dotenv
 import requests
 from requests.adapters import HTTPAdapter
+from app.browser import browser_login
 
 DEVICE_ID = "Badminton-Test-ABC-001"
 
@@ -58,30 +59,20 @@ def fetch_user_detail(session: requests.Session, field: str) -> None:
 
 def login() -> requests.Session:
     # Fetch request payload
-    url = os.getenv("LOGIN_API")
     user_number = os.getenv("USER_NUMBER")
     user_password = os.getenv("USER_PASSWORD")
 
-    if not url or not user_number or not user_password:
+    if not user_number or not user_password:
         raise RuntimeError("Login: Missing env variables")
 
-    payload = {
-        "number": user_number,
-        "password": user_password,
-        "device_id": DEVICE_ID,
-    }
-
-    # Create request session
-    session = create_session()
-
-    # Make login POST request
-    response = session.post(url, json=payload, timeout=15)
-    data = response.json()
+    data = browser_login(user_number, user_password)
 
     # Check if login was successful
     if data.get("status") != "success":
-        raise Exception("LOGIN FAILED")
+        raise Exception(f"Login failed: {data}")
 
+    # Create request session
+    session = create_session()
     # Update session headers with authentication token
     session.headers.update(
         {
