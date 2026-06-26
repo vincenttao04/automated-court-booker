@@ -2,11 +2,16 @@
 import asyncio
 
 # Third-Party Libraries
-from playwright.async_api import async_playwright, Response
+from playwright.async_api import (
+    async_playwright,
+    Response,
+    TimeoutError as PlaywrightTimeoutError,
+)
 from playwright_stealth import Stealth
 
 BOOKING_FRONTEND = "https://book.bnh.org.nz"
 LOGIN_API_PATH = "/api/v1/auth/login"
+TIMEOUT_MS = 30_000
 
 
 async def _playwright_login(user_number: str, user_password: str) -> dict:
@@ -42,17 +47,37 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
 
         page.on("response", handle_response)
 
-        # Navigate to login page and fill credentials
-        await page.goto(f"{BOOKING_FRONTEND}/auth/login", wait_until="networkidle")
-        await page.fill('input[type="text"]', user_number)
-        await page.fill('input[type="password"]', user_password)
-        await page.click('button[type="submit"]')
+        try:
+            # Navigate to login page
+            await page.goto(
+                f"{BOOKING_FRONTEND}/auth/login",
+                wait_until="networkidle",
+                timeout=TIMEOUT_MS,
+            )
 
-        # Wait for the login API call to complete
-        await page.wait_for_timeout(3000)
+            # Wait for fields to exist before filling in credentials
+            await page.wait_for_selector('input[type="text"]', timeout=TIMEOUT_MS)
+            await page.wait_for_selector('input[type="password"]', timeout=TIMEOUT_MS)
 
-        await context.close()
-        await browser.close()
+            await page.fill('input[type="text"]', user_number)
+            await page.fill('input[type="password"]', user_password)
+
+            # Capture response directly
+            async with page.expect_response(
+                lambda r: LOGIN_API_PATH in r.url and r.request.method == "POST",
+                timeout=TIMEOUT_MS,
+            ) as response_info:
+                await page.click('button[type="submit"]')
+
+            response = await response_info.value
+            login_response_data = await response.json()
+
+        except PlaywrightTimeoutError as e:
+            raise Exception(f"PLAYWRIGHT LOGIN: timed out — {e}")
+
+        finally:
+            await context.close()
+            await browser.close()
 
     if not login_response_data:
         raise Exception("PLAYWRIGHT LOGIN: no API response captured")
