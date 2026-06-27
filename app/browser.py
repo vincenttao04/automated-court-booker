@@ -4,7 +4,6 @@ import asyncio
 # Third-Party Libraries
 from playwright.async_api import (
     async_playwright,
-    Response,
     TimeoutError as PlaywrightTimeoutError,
 )
 from playwright_stealth import Stealth
@@ -15,8 +14,6 @@ TIMEOUT_MS = 30_000
 
 
 async def _playwright_login(user_number: str, user_password: str) -> dict:
-    login_response_data: dict = {}
-
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
 
@@ -37,16 +34,6 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
         # Stealth masks headless signals
         await Stealth().apply_stealth_async(page)
 
-        # Capture the login API response
-        async def handle_response(response: Response) -> None:
-            if LOGIN_API_PATH in response.url and response.request.method == "POST":
-                try:
-                    login_response_data.update(await response.json())
-                except Exception:
-                    pass
-
-        page.on("response", handle_response)
-
         try:
             # Navigate to login page
             await page.goto(
@@ -62,7 +49,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             await page.fill('input[type="text"]', user_number)
             await page.fill('input[type="password"]', user_password)
 
-            # Capture response directly
+            # Capture the login API response
             async with page.expect_response(
                 lambda r: LOGIN_API_PATH in r.url and r.request.method == "POST",
                 timeout=TIMEOUT_MS,
