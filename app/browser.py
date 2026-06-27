@@ -1,5 +1,6 @@
 # Standard Library
 import asyncio
+import random
 
 # Third-Party Libraries
 from playwright.async_api import (
@@ -15,7 +16,7 @@ TIMEOUT_MS = 30_000
 
 async def _playwright_login(user_number: str, user_password: str) -> dict:
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=False, channel="chrome")
 
         # Realistic browser context
         context = await browser.new_context(
@@ -60,7 +61,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             login_response_data = await response.json()
 
         except PlaywrightTimeoutError as e:
-            raise Exception(f"PLAYWRIGHT LOGIN: timed out — {e}")
+            raise Exception(f"PLAYWRIGHT LOGIN: timed out - {e}")
 
         finally:
             await context.close()
