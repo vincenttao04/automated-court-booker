@@ -47,8 +47,15 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             await page.wait_for_selector('input[type="text"]', timeout=TIMEOUT_MS)
             await page.wait_for_selector('input[type="password"]', timeout=TIMEOUT_MS)
 
-            await page.fill('input[type="text"]', user_number)
-            await page.fill('input[type="password"]', user_password)
+            await asyncio.sleep(random.uniform(0.5, 1.2))
+            await page.type(
+                'input[type="text"]', user_number, delay=random.randint(60, 120)
+            )
+            await asyncio.sleep(random.uniform(0.3, 0.8))
+            await page.type(
+                'input[type="password"]', user_password, delay=random.randint(60, 120)
+            )
+            await asyncio.sleep(random.uniform(0.4, 1.0))
 
             # Capture the login API response
             async with page.expect_response(
