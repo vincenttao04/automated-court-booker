@@ -55,17 +55,18 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             )
 
             # Wait for fields to exist before filling in credentials
-            await page.wait_for_selector('input[type="text"]')
-            await page.wait_for_selector('input[type="password"]')
+            number = page.locator('input[type="text"]')
+            password = page.locator('input[type="password"]')
 
+            # Fill in credentials with human-like typing and behaviour
             await human_pause(0.5, 1.2)
-            await page.type(
-                'input[type="text"]', user_number, delay=random.randint(60, 120)
-            )
+            for char in user_number:
+                await number.press_sequentially(char)
+                await asyncio.sleep(random.uniform(0.06, 0.1))
             await human_pause(0.3, 0.8)
-            await page.type(
-                'input[type="password"]', user_password, delay=random.randint(60, 120)
-            )
+            for char in user_password:
+                await password.press_sequentially(char)
+                await asyncio.sleep(random.uniform(0.08, 0.12))
             await human_pause(0.4, 1.0)
 
             # Capture the login API response
