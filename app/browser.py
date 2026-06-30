@@ -8,15 +8,18 @@ from playwright.async_api import (
     async_playwright,
     TimeoutError as PlaywrightTimeoutError,
 )
-from playwright_stealth import Stealth
 
-BOOKING_FRONTEND = "https://book.bnh.org.nz"
-LOGIN_API_PATH = "/api/v1/auth/login"
-TIMEOUT_MS = 30_000
 STORAGE_STATE_PATH = "browser_state.json"
 
 
 async def _playwright_login(user_number: str, user_password: str) -> dict:
+    LOGIN_API = os.getenv("LOGIN_API")
+    SCHEDULE_URL = os.getenv("SCHEDULE_URL")
+    LOGIN_URL = os.getenv("LOGIN_URL")
+
+    if not LOGIN_API or not SCHEDULE_URL or not LOGIN_URL:
+        raise RuntimeError("Missing env variables")
+
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False, channel="chrome")
 
@@ -31,26 +34,25 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
         )
 
         page = await context.new_page()
+        page.set_default_timeout(30_000)  # 30 seconds
 
         try:
             # Warm up session - visit home page first before login
             await page.goto(
-                BOOKING_FRONTEND,
+                SCHEDULE_URL,
                 wait_until="networkidle",
-                timeout=TIMEOUT_MS,
             )
             await asyncio.sleep(random.uniform(1.5, 2.5))
 
             # Navigate to login page
             await page.goto(
-                f"{BOOKING_FRONTEND}/auth/login",
+                LOGIN_URL,
                 wait_until="networkidle",
-                timeout=TIMEOUT_MS,
             )
 
             # Wait for fields to exist before filling in credentials
-            await page.wait_for_selector('input[type="text"]', timeout=TIMEOUT_MS)
-            await page.wait_for_selector('input[type="password"]', timeout=TIMEOUT_MS)
+            await page.wait_for_selector('input[type="text"]')
+            await page.wait_for_selector('input[type="password"]')
 
             await asyncio.sleep(random.uniform(0.5, 1.2))
             await page.type(
@@ -64,8 +66,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
 
             # Capture the login API response
             async with page.expect_response(
-                lambda r: LOGIN_API_PATH in r.url and r.request.method == "POST",
-                timeout=TIMEOUT_MS,
+                lambda r: r.url == LOGIN_API and r.request.method == "POST",
             ) as response_info:
                 await page.click('button[type="submit"]')
 
@@ -82,6 +83,12 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
 
     if not login_response_data:
         raise Exception("PLAYWRIGHT LOGIN FAILED: no API response captured")
+
+    # Check if login was successful
+    if login_response_data.get("status") != "success":
+        raise Exception(
+            f"LOGIN FAILED: {login_response_data.get('message', 'Unknown error')}"
+        )
 
     return login_response_data
 
