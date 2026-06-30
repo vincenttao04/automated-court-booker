@@ -9,14 +9,18 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
+LOGIN_API = os.environ["LOGIN_API"]
+LOGIN_URL = os.environ["LOGIN_URL"]
+SCHEDULE_URL = os.environ["SCHEDULE_URL"]
 STORAGE_STATE_PATH = "browser_state.json"
 
 
-async def _playwright_login(user_number: str, user_password: str) -> dict:
-    LOGIN_API = os.getenv("LOGIN_API")
-    SCHEDULE_URL = os.getenv("SCHEDULE_URL")
-    LOGIN_URL = os.getenv("LOGIN_URL")
+# Helper function: simulate human-like pause for a random duration
+async def human_pause(min_s, max_s):
+    await asyncio.sleep(random.uniform(min_s, max_s))
 
+
+async def _playwright_login(user_number: str, user_password: str) -> dict:
     if not LOGIN_API or not SCHEDULE_URL or not LOGIN_URL:
         raise RuntimeError("Missing env variables")
 
@@ -42,7 +46,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
                 SCHEDULE_URL,
                 wait_until="networkidle",
             )
-            await asyncio.sleep(random.uniform(1.5, 2.5))
+            await human_pause(1.5, 2.5)
 
             # Navigate to login page
             await page.goto(
@@ -54,15 +58,15 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             await page.wait_for_selector('input[type="text"]')
             await page.wait_for_selector('input[type="password"]')
 
-            await asyncio.sleep(random.uniform(0.5, 1.2))
+            await human_pause(0.5, 1.2)
             await page.type(
                 'input[type="text"]', user_number, delay=random.randint(60, 120)
             )
-            await asyncio.sleep(random.uniform(0.3, 0.8))
+            await human_pause(0.3, 0.8)
             await page.type(
                 'input[type="password"]', user_password, delay=random.randint(60, 120)
             )
-            await asyncio.sleep(random.uniform(0.4, 1.0))
+            await human_pause(0.4, 1.0)
 
             # Capture the login API response
             async with page.expect_response(
