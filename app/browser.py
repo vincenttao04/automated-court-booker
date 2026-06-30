@@ -73,7 +73,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             login_response_data = await response.json()
 
         except PlaywrightTimeoutError as e:
-            raise Exception(f"PLAYWRIGHT LOGIN: timed out - {e}")
+            raise Exception(f"PLAYWRIGHT LOGIN FAILED: timed out - {e}")
 
         finally:
             await context.storage_state(path=STORAGE_STATE_PATH)
@@ -81,7 +81,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             await browser.close()
 
     if not login_response_data:
-        raise Exception("PLAYWRIGHT LOGIN: no API response captured")
+        raise Exception("PLAYWRIGHT LOGIN FAILED: no API response captured")
 
     return login_response_data
 

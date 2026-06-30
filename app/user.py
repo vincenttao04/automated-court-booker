@@ -43,7 +43,7 @@ def fetch_user_detail(session: requests.Session, field: str) -> None:
     # Fetch request payload
     url = os.getenv("USER_DATA_API")
     if not url:
-        raise RuntimeError("Fetch User Detail: Missing env variables")
+        raise RuntimeError("FETCH USER DETAIL FAILED: Missing env variables")
 
     # Make fetch user detail GET request
     response = session.get(url, timeout=15)
@@ -51,7 +51,9 @@ def fetch_user_detail(session: requests.Session, field: str) -> None:
 
     # Check if fetch user detail was successful
     if data.get("status") != "success":
-        raise Exception("FETCH USER DETAIL FAILED")
+        raise Exception(
+            f"FETCH USER DETAIL FAILED: {data.get('message', 'Unknown error')}"
+        )
 
     print(f"{field}: {data['data'].get(field)}")
     return
@@ -69,7 +71,7 @@ def login() -> requests.Session:
 
     # Check if login was successful
     if data.get("status") != "success":
-        raise Exception(f"Login failed: {data}")
+        raise Exception(f"LOGIN FAILED: {data.get('message', 'Unknown error')}")
 
     # Create request session
     session = create_session()
@@ -107,7 +109,7 @@ def logout(session: requests.Session) -> None:
 
     # Check if logout was successful
     if data.get("status") != "success":
-        raise Exception("LOGOUT FAILED")
+        raise Exception(f"LOGOUT FAILED: {data.get('message', 'Unknown error')}")
 
     print(f"logout successful: {os.getenv('USER_NUMBER')}\n")
     return

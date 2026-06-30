@@ -71,7 +71,9 @@ def get_court_schedule(
 
     # Check if fetch court availability was successful
     if data.get("status") != "success":
-        raise Exception("FETCH COURT AVAILABILITY FAILED")
+        raise Exception(
+            f"FETCH COURT AVAILABILITY FAILED: {data.get('message', 'Unknown error')}"
+        )
 
     print(
         f"fetch court schedule: {criteria.location_name}, {criteria.date}, between {criteria.start_time} and {criteria.end_time}"
@@ -213,7 +215,9 @@ def book_court(
 
     # Check if booking_create was successful
     if data.get("status") != "success":
-        raise Exception("CREATE BOOKING FAILED")
+        raise Exception(
+            f"CREATE BOOKING FAILED: {data.get('message', 'Unknown error')}"
+        )
 
     return (
         data["data"]["user_id"],
@@ -233,7 +237,7 @@ def pay_court(
     # Check if court payment was successful
     if "Payment Success" not in response.text:
         error_message = extract_payment_error(response.text)
-        raise Exception(error_message or "Unknown payment error")
+        raise Exception(f"COURT PAYMENT FAILED: {error_message or 'Unknown error'}")
 
     print(
         f"({count}) court payment successful - check email for confirmation/receipt\n"
