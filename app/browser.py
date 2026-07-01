@@ -16,14 +16,11 @@ STORAGE_STATE_PATH = "browser_state.json"
 
 
 # Helper function: simulate human-like pause for a random duration
-async def human_pause(min_s, max_s):
+async def human_pause(min_s: float, max_s: float) -> None:
     await asyncio.sleep(random.uniform(min_s, max_s))
 
 
 async def _playwright_login(user_number: str, user_password: str) -> dict:
-    if not LOGIN_API or not SCHEDULE_URL or not LOGIN_URL:
-        raise RuntimeError("Missing env variables")
-
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False, channel="chrome")
 
@@ -62,11 +59,11 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             await human_pause(0.5, 1.2)
             for char in user_number:
                 await number.press_sequentially(char)
-                await asyncio.sleep(random.uniform(0.06, 0.1))
+                await human_pause(0.06, 0.1)
             await human_pause(0.3, 0.8)
             for char in user_password:
                 await password.press_sequentially(char)
-                await asyncio.sleep(random.uniform(0.08, 0.12))
+                await human_pause(0.08, 0.12)
             await human_pause(0.4, 1.0)
 
             # Capture the login API response

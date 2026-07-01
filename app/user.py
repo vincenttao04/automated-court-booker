@@ -69,10 +69,6 @@ def login() -> requests.Session:
 
     data = browser_login(user_number, user_password)
 
-    # Check if login was successful
-    if data.get("status") != "success":
-        raise Exception(f"LOGIN FAILED: {data.get('message', 'Unknown error')}")
-
     # Create request session
     session = create_session()
     # Update session headers with authentication token
