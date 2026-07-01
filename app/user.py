@@ -6,6 +6,8 @@ import time
 from dotenv import load_dotenv
 import requests
 from requests.adapters import HTTPAdapter
+
+# Local Application Imports
 from app.browser import browser_login
 from app.utils import check_status
 
@@ -70,7 +72,7 @@ def login() -> requests.Session:
 
     if not user_number or not user_password:
         raise RuntimeError(
-            "LOGIN FAILED: missing env variable(s) - USER_NUMBER or USER_PASSWORD"
+            "LOGIN FAILED: missing env variable(s) - USER_NUMBER and/or USER_PASSWORD"
         )
 
     data = browser_login(user_number, user_password)
@@ -101,7 +103,7 @@ def logout(session: requests.Session) -> None:
     # Fetch request payload
     url = os.getenv("LOGOUT_API")
     if not url:
-        raise RuntimeError("Logout: Missing env variables")
+        raise RuntimeError("LOGOUT FAILED: missing env variable(s) - LOGOUT_API")
 
     payload = {"device_id": DEVICE_ID}
 

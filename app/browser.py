@@ -12,9 +12,9 @@ from playwright.async_api import (
 # Local Application Imports
 from app.utils import check_status
 
-LOGIN_API = os.environ["LOGIN_API"]
-LOGIN_URL = os.environ["LOGIN_URL"]
-SCHEDULE_URL = os.environ["SCHEDULE_URL"]
+LOGIN_API = os.getenv("LOGIN_API")
+LOGIN_URL = os.getenv("LOGIN_URL")
+SCHEDULE_URL = os.getenv("SCHEDULE_URL")
 STORAGE_STATE_PATH = "browser_state.json"
 
 
@@ -26,7 +26,7 @@ async def human_pause(min_s: float, max_s: float) -> None:
 async def _playwright_login(user_number: str, user_password: str) -> dict:
     if not LOGIN_API or not LOGIN_URL or not SCHEDULE_URL:
         raise RuntimeError(
-            "PLAYWRIGHT LOGIN FAILED: missing env variable(s) - LOGIN_API or LOGIN_URL or SCHEDULE_URL"
+            "PLAYWRIGHT LOGIN FAILED: missing env variable(s) - LOGIN_API, LOGIN_URL and/or SCHEDULE_URL"
         )
 
     async with async_playwright() as p:
@@ -102,3 +102,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
 
 def browser_login(user_number: str, user_password: str) -> dict:
     return asyncio.run(_playwright_login(user_number, user_password))
+
+
+#### TODO: CHECK IF BROWSWER STATE IS OKAY?, RECAPTCHA FOR CREATE BOOKING, TEST, HEADLESS CHROME - DOES IT HAVE TO OPEN, WILL IT WORK IN AWS?
+#### TODO: clean up codebase, refactor everything as necessary. redeploy to aws, check other files needed to upload to s3 bucket (cookies?), make pipeline for github to aws auto deploy?

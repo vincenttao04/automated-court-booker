@@ -241,7 +241,9 @@ def pay_court(
     # Fetch request payload
     payment_api = os.getenv("PAYMENT_API")
     if not payment_api:
-        raise RuntimeError("COURT PAYMENT FAILED: missing env variable(s) - PAYMENT_API")
+        raise RuntimeError(
+            "COURT PAYMENT FAILED: missing env variable(s) - PAYMENT_API"
+        )
     url = f"{payment_api}{user_id}/{booking_id}"
 
     # Make court payment GET request; Response Content-Type: text/html; charset=UTF-8
@@ -275,6 +277,6 @@ def book_all_available(
             schedule = get_court_schedule(session, criteria)
             booking_info = identify_courts(schedule, criteria)
             count += 1
-        except Exception as e:
+        except RuntimeError as e:
             print(f"Error: {e}")
             break

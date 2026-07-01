@@ -81,5 +81,5 @@ def fetch_criteria() -> BookingCriteria | None:
         end_time=day_schedule.get("end", DEFAULT_END),
         location=Location(day_schedule.get("location", DEFAULT_LOCATION)),
         priority=Priority(day_schedule.get("priority", DEFAULT_PRIORITY)),
-        price=config["price_per_court"] or 27,
+        price=config.get("price_per_court") or 27,
     )
