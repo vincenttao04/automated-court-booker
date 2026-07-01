@@ -9,6 +9,9 @@ from playwright.async_api import (
     TimeoutError as PlaywrightTimeoutError,
 )
 
+# Local Application Imports
+from app.utils import check_status
+
 LOGIN_API = os.environ["LOGIN_API"]
 LOGIN_URL = os.environ["LOGIN_URL"]
 SCHEDULE_URL = os.environ["SCHEDULE_URL"]
@@ -21,6 +24,11 @@ async def human_pause(min_s: float, max_s: float) -> None:
 
 
 async def _playwright_login(user_number: str, user_password: str) -> dict:
+    if not LOGIN_API or not LOGIN_URL or not SCHEDULE_URL:
+        raise RuntimeError(
+            "PLAYWRIGHT LOGIN FAILED: missing env variable(s) - LOGIN_API or LOGIN_URL or SCHEDULE_URL"
+        )
+
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False, channel="chrome")
 
@@ -76,7 +84,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             login_response_data = await response.json()
 
         except PlaywrightTimeoutError as e:
-            raise Exception(f"PLAYWRIGHT LOGIN FAILED: timed out - {e}")
+            raise RuntimeError(f"PLAYWRIGHT LOGIN FAILED: timed out - {e}")
 
         finally:
             await context.storage_state(path=STORAGE_STATE_PATH)
@@ -84,13 +92,10 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             await browser.close()
 
     if not login_response_data:
-        raise Exception("PLAYWRIGHT LOGIN FAILED: no API response captured")
+        raise RuntimeError("PLAYWRIGHT LOGIN FAILED: no API response captured")
 
     # Check if login was successful
-    if login_response_data.get("status") != "success":
-        raise Exception(
-            f"LOGIN FAILED: {login_response_data.get('message', 'Unknown error')}"
-        )
+    check_status(login_response_data, "PLAYWRIGHT LOGIN")
 
     return login_response_data
 

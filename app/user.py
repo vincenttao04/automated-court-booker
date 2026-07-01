@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import requests
 from requests.adapters import HTTPAdapter
 from app.browser import browser_login
+from app.utils import check_status
 
 DEVICE_ID = "Badminton-Test-ABC-001"
 
@@ -43,17 +44,20 @@ def fetch_user_detail(session: requests.Session, field: str) -> None:
     # Fetch request payload
     url = os.getenv("USER_DATA_API")
     if not url:
-        raise RuntimeError("FETCH USER DETAIL FAILED: Missing env variables")
+        raise RuntimeError(
+            "FETCH USER DETAIL FAILED: missing env variable(s) - USER_DATA_API"
+        )
 
     # Make fetch user detail GET request
-    response = session.get(url, timeout=15)
+    try:
+        response = session.get(url, timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"FETCH USER DETAIL FAILED: network error - {e}")
+
     data = response.json()
 
     # Check if fetch user detail was successful
-    if data.get("status") != "success":
-        raise Exception(
-            f"FETCH USER DETAIL FAILED: {data.get('message', 'Unknown error')}"
-        )
+    check_status(data, "FETCH USER DETAIL")
 
     print(f"{field}: {data['data'].get(field)}")
     return
@@ -65,7 +69,9 @@ def login() -> requests.Session:
     user_password = os.getenv("USER_PASSWORD")
 
     if not user_number or not user_password:
-        raise RuntimeError("Login: Missing env variables")
+        raise RuntimeError(
+            "LOGIN FAILED: missing env variable(s) - USER_NUMBER or USER_PASSWORD"
+        )
 
     data = browser_login(user_number, user_password)
 
@@ -100,12 +106,15 @@ def logout(session: requests.Session) -> None:
     payload = {"device_id": DEVICE_ID}
 
     # Make logout POST request
-    response = session.post(url, json=payload, timeout=15)
+    try:
+        response = session.post(url, json=payload, timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"LOGOUT FAILED: network error - {e}")
+
     data = response.json()
 
     # Check if logout was successful
-    if data.get("status") != "success":
-        raise Exception(f"LOGOUT FAILED: {data.get('message', 'Unknown error')}")
+    check_status(data, "LOGOUT")
 
     print(f"logout successful: {os.getenv('USER_NUMBER')}\n")
     return

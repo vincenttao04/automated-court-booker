@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 # Local Application Imports
 from app.constants import Priority
 from app.models import BookingCriteria, BookingInformation
+from app.utils import check_status
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -63,17 +64,23 @@ def get_court_schedule(
     criteria: BookingCriteria,
 ) -> dict:
     # Fetch request payload
-    url = f"{os.getenv('COURT_SCHEDULE_API')}{criteria.date}"
+    court_schedule_api = os.getenv("COURT_SCHEDULE_API")
+    if not court_schedule_api:
+        raise RuntimeError(
+            "FETCH COURT AVAILABILITY FAILED: missing env variable(s) - COURT_SCHEDULE_API"
+        )
+    url = f"{court_schedule_api}{criteria.date}"
 
     # Make fetch court availability GET request
-    response = session.get(url, timeout=15)
+    try:
+        response = session.get(url, timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"FETCH COURT AVAILABILITY FAILED: network error - {e}")
+
     data = response.json()
 
     # Check if fetch court availability was successful
-    if data.get("status") != "success":
-        raise Exception(
-            f"FETCH COURT AVAILABILITY FAILED: {data.get('message', 'Unknown error')}"
-        )
+    check_status(data, "FETCH COURT AVAILABILITY")
 
     print(
         f"fetch court schedule: {criteria.location_name}, {criteria.date}, between {criteria.start_time} and {criteria.end_time}"
@@ -204,20 +211,23 @@ PRIORITY_HANDLER = {
 def book_court(
     session: requests.Session, booking_info: BookingInformation
 ) -> tuple[int, int]:
-    # Fetch request_one payload
+    # Fetch request payload
     url = os.getenv("BOOKING_API")
     if not url:
-        raise RuntimeError("Book Court: Missing env variables")
+        raise RuntimeError(
+            "CREATE BOOKING FAILED: missing env variable(s) - BOOKING_API"
+        )
 
     # Make booking_create POST request
-    response = session.post(url, json=asdict(booking_info), timeout=15)
+    try:
+        response = session.post(url, json=asdict(booking_info), timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"CREATE BOOKING FAILED: network error - {e}")
+
     data = response.json()
 
     # Check if booking_create was successful
-    if data.get("status") != "success":
-        raise Exception(
-            f"CREATE BOOKING FAILED: {data.get('message', 'Unknown error')}"
-        )
+    check_status(data, "CREATE BOOKING")
 
     return (
         data["data"]["user_id"],
@@ -229,15 +239,21 @@ def pay_court(
     session: requests.Session, user_id: int, booking_id: int, count: int
 ) -> None:
     # Fetch request payload
-    url = f"{os.getenv('PAYMENT_API')}{user_id}/{booking_id}"
+    payment_api = os.getenv("PAYMENT_API")
+    if not payment_api:
+        raise RuntimeError("COURT PAYMENT FAILED: missing env variable(s) - PAYMENT_API")
+    url = f"{payment_api}{user_id}/{booking_id}"
 
     # Make court payment GET request; Response Content-Type: text/html; charset=UTF-8
-    response = session.get(url, timeout=15)
+    try:
+        response = session.get(url, timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
 
     # Check if court payment was successful
     if "Payment Success" not in response.text:
         error_message = extract_payment_error(response.text)
-        raise Exception(f"COURT PAYMENT FAILED: {error_message or 'Unknown error'}")
+        raise RuntimeError(f"COURT PAYMENT FAILED: {error_message or 'Unknown error'}")
 
     print(
         f"({count}) court payment successful - check email for confirmation/receipt\n"
