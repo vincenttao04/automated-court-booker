@@ -8,14 +8,24 @@ from playwright.async_api import (
     async_playwright,
     TimeoutError as PlaywrightTimeoutError,
 )
+from dotenv import load_dotenv
 
 # Local Application Imports
 from app.utils import check_status
+
+import json
+import urllib.parse
+
+if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
+    load_dotenv()
 
 LOGIN_API = os.getenv("LOGIN_API")
 LOGIN_URL = os.getenv("LOGIN_URL")
 SCHEDULE_URL = os.getenv("SCHEDULE_URL")
 STORAGE_STATE_PATH = "browser_state.json"
+
+BOOKING_CONFIRM_PATH = "/payment/booking-confirm"
+BOOKING_API_PATH = "/api/v1/bookings/create"
 
 
 # Helper function: simulate human-like pause for a random duration
@@ -102,6 +112,59 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
 
 def browser_login(user_number: str, user_password: str) -> dict:
     return asyncio.run(_playwright_login(user_number, user_password))
+
+
+async def _playwright_book_court(booking_info: dict) -> tuple[int, int]:
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False, channel="chromium")
+
+        context = await browser.new_context(
+            viewport={"width": 1280, "height": 800},
+            locale="en-NZ",
+            timezone_id="Pacific/Auckland",
+            storage_state=(
+                STORAGE_STATE_PATH if os.path.exists(STORAGE_STATE_PATH) else None
+            ),
+        )
+
+        page = await context.new_page()
+
+        try:
+            # Build confirmation page URL with booking data
+            encoded_data = urllib.parse.quote(json.dumps(booking_info))
+            url = f"{SCHEDULE_URL}{BOOKING_CONFIRM_PATH}?data={encoded_data}"
+
+            await page.goto(url, wait_until="networkidle", timeout=30_000)
+            await asyncio.sleep(random.uniform(1.0, 2.0))
+
+            # Capture the booking API response
+            async with page.expect_response(
+                lambda r: BOOKING_API_PATH in r.url and r.request.method == "POST",
+                timeout=30_000,
+            ) as response_info:
+                await page.click('button[type="submit"]')
+
+            response = await response_info.value
+            data = await response.json()
+
+            if data.get("status") != "success":
+                raise Exception(
+                    f"CREATE BOOKING FAILED: {data.get('message', 'Unknown error')}"
+                )
+
+            return data["data"]["user_id"], data["data"]["id"]
+
+        except PlaywrightTimeoutError as e:
+            raise Exception(f"PLAYWRIGHT BOOK COURT: timed out - {e}")
+
+        finally:
+            await context.storage_state(path=STORAGE_STATE_PATH)
+            await context.close()
+            await browser.close()
+
+
+def browser_book_court(booking_info: dict) -> tuple[int, int]:
+    return asyncio.run(_playwright_book_court(booking_info))
 
 
 #### TODO: CHECK IF BROWSWER STATE IS OKAY?, RECAPTCHA FOR CREATE BOOKING, TEST, HEADLESS CHROME - DOES IT HAVE TO OPEN, WILL IT WORK IN AWS?
