@@ -2,7 +2,10 @@
   "price_per_court": 27,
   "schedule": {
     "monday": null,
-    "tuesday": null,
+    "tuesday": {
+      "start": "06:00",
+      "end": "07:00"
+    },
     "wednesday": {
       "start": "19:00",
       "end": "21:00"
