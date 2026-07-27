@@ -114,6 +114,9 @@ def browser_login(user_number: str, user_password: str) -> dict:
     return asyncio.run(_playwright_login(user_number, user_password))
 
 
+BOOKING_INFO_PATH = "/payment/booking-info"
+
+
 async def _playwright_book_court(booking_info: dict) -> tuple[int, int]:
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False, channel="chrome")
@@ -128,35 +131,33 @@ async def _playwright_book_court(booking_info: dict) -> tuple[int, int]:
         )
 
         page = await context.new_page()
-        page.set_default_timeout(30_000)  # 30 seconds
+        page.set_default_timeout(30_000)
 
         try:
-            # Build confirmation page URL with booking data
-            encoded_data = urllib.parse.quote(json.dumps(booking_info))
-            url = f"{SCHEDULE_URL}{BOOKING_CONFIRM_PATH}?data={encoded_data}"
+            # Build booking info page URL
+            encoded_data = urllib.parse.quote(
+                json.dumps(booking_info, separators=(",", ":"))
+            )
+            url = f"{SCHEDULE_URL}{BOOKING_INFO_PATH}?data={encoded_data}"
 
             await page.goto(url, wait_until="networkidle")
-            await asyncio.sleep(random.uniform(1.0, 2.0))
+            await human_pause(1.5, 2.5)
 
-            # Capture the booking API response
+            # Capture the create booking API response
             async with page.expect_response(
                 lambda r: BOOKING_API_PATH in r.url and r.request.method == "POST",
-                timeout=30_000,
             ) as response_info:
-                await page.click('button[type="submit"]')
+                await page.click('button:has-text("Continue")')
 
             response = await response_info.value
             data = await response.json()
 
             check_status(data, "CREATE BOOKING")
 
-            return (
-                data["data"]["user_id"],
-                data["data"]["id"],
-            )  # returns user_id and booking_id as integers
+            return data["data"]["user_id"], data["data"]["id"]
 
         except PlaywrightTimeoutError as e:
-            raise Exception(f"PLAYWRIGHT BOOK COURT: timed out - {e}")
+            raise RuntimeError(f"PLAYWRIGHT BOOK COURT: timed out - {e}")
 
         finally:
             await context.storage_state(path=STORAGE_STATE_PATH)
@@ -168,5 +169,5 @@ def browser_book_court(booking_info: dict) -> tuple[int, int]:
     return asyncio.run(_playwright_book_court(booking_info))
 
 
-#### TODO: CHECK IF BROWSWER STATE IS OKAY?, RECAPTCHA FOR CREATE BOOKING, TEST, HEADLESS CHROME - DOES IT HAVE TO OPEN, WILL IT WORK IN AWS?
+#### TODO: CHECK IF BROWSWER STATE IS OKAY? HEADLESS CHROME - DOES IT HAVE TO OPEN, WILL IT WORK IN AWS?
 #### TODO: clean up codebase, refactor everything as necessary. redeploy to aws, check other files needed to upload to s3 bucket (cookies?), make pipeline for github to aws auto deploy?
