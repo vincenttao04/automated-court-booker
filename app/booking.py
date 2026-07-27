@@ -235,36 +235,77 @@ def book_court(
     #     data["data"]["id"],
     # )  # returns user_id and booking_id as integers
 
-    return browser_book_court(asdict(booking_info))  # returns user_id and booking_id as integers
+    return browser_book_court(
+        asdict(booking_info)
+    )  # returns user_id and booking_id as integers
 
 
 def pay_court(
     session: requests.Session, user_id: int, booking_id: int, count: int
 ) -> None:
+    # # Fetch request payload
+    # payment_api = os.getenv("PAYMENT_API")
+    # if not payment_api:
+    #     raise RuntimeError(
+    #         "COURT PAYMENT FAILED: missing env variable(s) - PAYMENT_API"
+    #     )
+    # url = f"{payment_api}{user_id}/{booking_id}"
+
+    # print(f"payment url: {url}")  # temporary
+
+    # # Make court payment GET request; Response Content-Type: text/html; charset=UTF-8
+    # try:
+    #     response = session.get(url, timeout=15)
+    # except requests.RequestException as e:
+    #     raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
+
+    # # Check if court payment was successful
+    # if "Payment Success" not in response.text:
+    #     error_message = extract_payment_error(response.text)
+    #     raise RuntimeError(f"COURT PAYMENT FAILED: {error_message or 'Unknown error'}")
+
+    # print(
+    #     f"({count}) court payment successful - check email for confirmation/receipt\n"
+    # )
+
+    # return
+
     # Fetch request payload
     payment_api = os.getenv("PAYMENT_API")
     if not payment_api:
         raise RuntimeError(
             "COURT PAYMENT FAILED: missing env variable(s) - PAYMENT_API"
         )
-    url = f"{payment_api}{user_id}/{booking_id}"
+    url = f"{payment_api}?user_id={user_id}&order_id={booking_id}"  # requires user id and booking id (..?user_id={user_id}&order_id={booking_id})
 
-    # Make court payment GET request; Response Content-Type: text/html; charset=UTF-8
+    print(f"payment url: {url}")  # temp
+
     try:
         response = session.get(url, timeout=15)
+        print(f"payment response: {response.text[:500]}")
     except requests.RequestException as e:
         raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
 
-    # Check if court payment was successful
-    if "Payment Success" not in response.text:
-        error_message = extract_payment_error(response.text)
+    match = re.search(r'data-url="([^"]+)"', response.text)
+    if not match:
+        raise RuntimeError("COURT PAYMENT FAILED: could not find signed payment URL")
+
+    signed_url = match.group(1).replace("&amp;", "&")
+
+    print(f"signed url: {signed_url}")  # temp
+
+    try:
+        payment_response = session.get(signed_url, timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
+
+    if "Payment Success" not in payment_response.text:
+        error_message = extract_payment_error(payment_response.text)
         raise RuntimeError(f"COURT PAYMENT FAILED: {error_message or 'Unknown error'}")
 
     print(
         f"({count}) court payment successful - check email for confirmation/receipt\n"
     )
-
-    return
 
 
 def book_all_available(
@@ -276,6 +317,9 @@ def book_all_available(
     while booking_info is not None:
         try:
             user_id, booking_id = book_court(session, booking_info)
+
+            print(f"user_id: {user_id}, booking_id: {booking_id}")  # temp
+
             pay_court(session, user_id, booking_id, count)
             schedule = get_court_schedule(session, criteria)
             booking_info = identify_courts(schedule, criteria)
