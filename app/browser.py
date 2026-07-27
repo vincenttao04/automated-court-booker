@@ -116,7 +116,7 @@ def browser_login(user_number: str, user_password: str) -> dict:
 
 async def _playwright_book_court(booking_info: dict) -> tuple[int, int]:
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, channel="chromium")
+        browser = await p.chromium.launch(headless=False, channel="chrome")
 
         context = await browser.new_context(
             viewport={"width": 1280, "height": 800},
@@ -128,13 +128,14 @@ async def _playwright_book_court(booking_info: dict) -> tuple[int, int]:
         )
 
         page = await context.new_page()
+        page.set_default_timeout(30_000)  # 30 seconds
 
         try:
             # Build confirmation page URL with booking data
             encoded_data = urllib.parse.quote(json.dumps(booking_info))
             url = f"{SCHEDULE_URL}{BOOKING_CONFIRM_PATH}?data={encoded_data}"
 
-            await page.goto(url, wait_until="networkidle", timeout=30_000)
+            await page.goto(url, wait_until="networkidle")
             await asyncio.sleep(random.uniform(1.0, 2.0))
 
             # Capture the booking API response
@@ -147,12 +148,12 @@ async def _playwright_book_court(booking_info: dict) -> tuple[int, int]:
             response = await response_info.value
             data = await response.json()
 
-            if data.get("status") != "success":
-                raise Exception(
-                    f"CREATE BOOKING FAILED: {data.get('message', 'Unknown error')}"
-                )
+            check_status(data, "CREATE BOOKING")
 
-            return data["data"]["user_id"], data["data"]["id"]
+            return (
+                data["data"]["user_id"],
+                data["data"]["id"],
+            )  # returns user_id and booking_id as integers
 
         except PlaywrightTimeoutError as e:
             raise Exception(f"PLAYWRIGHT BOOK COURT: timed out - {e}")

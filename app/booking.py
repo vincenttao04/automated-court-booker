@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from app.constants import Priority
 from app.models import BookingCriteria, BookingInformation
 from app.utils import check_status
+from app.browser import browser_book_court
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -211,28 +212,30 @@ PRIORITY_HANDLER = {
 def book_court(
     session: requests.Session, booking_info: BookingInformation
 ) -> tuple[int, int]:
-    # Fetch request payload
-    url = os.getenv("BOOKING_API")
-    if not url:
-        raise RuntimeError(
-            "CREATE BOOKING FAILED: missing env variable(s) - BOOKING_API"
-        )
+    # # Fetch request payload
+    # url = os.getenv("BOOKING_API")
+    # if not url:
+    #     raise RuntimeError(
+    #         "CREATE BOOKING FAILED: missing env variable(s) - BOOKING_API"
+    #     )
 
-    # Make booking_create POST request
-    try:
-        response = session.post(url, json=asdict(booking_info), timeout=15)
-    except requests.RequestException as e:
-        raise RuntimeError(f"CREATE BOOKING FAILED: network error - {e}")
+    # # Make booking_create POST request
+    # try:
+    #     response = session.post(url, json=asdict(booking_info), timeout=15)
+    # except requests.RequestException as e:
+    #     raise RuntimeError(f"CREATE BOOKING FAILED: network error - {e}")
 
-    data = response.json()
+    # data = response.json()
 
-    # Check if booking_create was successful
-    check_status(data, "CREATE BOOKING")
+    # # Check if booking_create was successful
+    # check_status(data, "CREATE BOOKING")
 
-    return (
-        data["data"]["user_id"],
-        data["data"]["id"],
-    )  # returns user_id and booking_id as integers
+    # return (
+    #     data["data"]["user_id"],
+    #     data["data"]["id"],
+    # )  # returns user_id and booking_id as integers
+
+    return browser_book_court(asdict(booking_info))  # returns user_id and booking_id as integers
 
 
 def pay_court(
