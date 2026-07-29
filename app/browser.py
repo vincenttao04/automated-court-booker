@@ -138,7 +138,10 @@ BOOKING_INFO_PATH = "/payment/booking-info"
 
 async def _playwright_book_court(booking_info) -> str:
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, channel="chrome")
+        browser = await p.chromium.launch(headless=True, channel="chrome")
+
+        # Fetch the corrected user agent string
+        corrected_ua = await _get_corrected_user_agent(browser)
 
         context = await browser.new_context(
             viewport={"width": 1280, "height": 800},
@@ -147,6 +150,7 @@ async def _playwright_book_court(booking_info) -> str:
             storage_state=(
                 STORAGE_STATE_PATH if os.path.exists(STORAGE_STATE_PATH) else None
             ),
+            user_agent=corrected_ua,
         )
 
         page = await context.new_page()
