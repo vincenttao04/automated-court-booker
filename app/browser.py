@@ -2,6 +2,7 @@
 import asyncio
 import os
 import random
+import re
 
 # Third-Party Libraries
 from playwright.async_api import (
@@ -157,34 +158,23 @@ async def _playwright_book_court(booking_info) -> str:
             user_id = data["data"]["user_id"]
             booking_id = data["data"]["id"]
 
-            ##
-            payment_api = os.getenv("PAYMENT_API")
-            payment_url = f"{payment_api}?user_id={user_id}&order_id={booking_id}"
+            # temp logs
+            # click "pay now" button
+            await page.wait_for_selector('button:has-text("Pay Now")', timeout=30_000)
+            await human_pause(1.0, 2.0)
+            await page.click('button:has-text("Pay Now")')
 
-            payment_page_html = await page.evaluate(
-                """
-                async (url) => {
-                    const res = await fetch(url);
-                    return await res.text();
-                }
-            """,
-                payment_url,
-            )
+            await page.wait_for_load_state("networkidle")
+            await human_pause(1.0, 2.0)
 
-            print(f"payment page response: {payment_page_html[:500]}")  # temporary
+            payment_page_html = await page.content()
 
             # Extract signed URL from HTML
-            import re
-
             match = re.search(r'data-url="([^"]+)"', payment_page_html)
             if not match:
-                raise RuntimeError(
-                    "COURT PAYMENT FAILED: could not find signed payment URL"
-                )
+                raise RuntimeError("COURT PAYMENT FAILED: could not find signed payment URL")
 
             signed_payment_url = match.group(1).replace("&amp;", "&")
-            print(f"signed url found: {signed_payment_url[:50]}...")
-
             return signed_payment_url
 
         except PlaywrightTimeoutError as e:
