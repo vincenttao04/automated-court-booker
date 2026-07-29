@@ -8,7 +8,7 @@ import requests
 from requests.adapters import HTTPAdapter
 
 # Local Application Imports
-from app.browser import browser_login
+from app.browser import browser_login, get_user_agent
 from app.utils import check_status
 
 DEVICE_ID = "Badminton-Test-ABC-001"
@@ -23,7 +23,7 @@ def create_session():
         "Accept": "application/json",
         "Origin": "https://book.bnh.org.nz",
         "Referer": "https://book.bnh.org.nz/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+        "User-Agent": get_user_agent(),
     }
 
     # Instantiate request session

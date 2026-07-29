@@ -25,8 +25,8 @@ LOGIN_URL = os.getenv("LOGIN_URL")
 SCHEDULE_URL = os.getenv("SCHEDULE_URL")
 STORAGE_STATE_PATH = "browser_state.json"
 
-BOOKING_CONFIRM_PATH = "/payment/booking-confirm"
-BOOKING_API_PATH = "/api/v1/bookings/create"
+BOOKING_CONFIRM_PATH = "/payment/booking-confirm"  ## TODO
+BOOKING_API_PATH = "/api/v1/bookings/create"  ## TODO
 
 
 # Helper function: simulate human-like pause for a random duration
@@ -40,12 +40,20 @@ async def human_pause(min_s: float, max_s: float) -> None:
 
 # Helper function: fetch the corrected user agent string
 # Removes the "Headless" token from default user agent reported by Playwright
-async def _get_corrected_user_agent(browser) -> str:
-    temp_context = await browser.new_context()
-    temp_page = await temp_context.new_page()
-    raw_ua = await temp_page.evaluate("navigator.userAgent")
-    await temp_context.close()
+async def _fetch_user_agent() -> str:
+    print("fetching user agent.....................................")  ## temp
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True, channel="chrome")
+        context = await browser.new_context()
+        page = await context.new_page()
+        raw_ua = await page.evaluate("navigator.userAgent")
+        await context.close()
+        await browser.close()
     return raw_ua.replace("HeadlessChrome/", "Chrome/")
+
+
+def get_user_agent() -> str:
+    return asyncio.run(_fetch_user_agent())
 
 
 async def _playwright_login(user_number: str, user_password: str) -> dict:
@@ -57,9 +65,6 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True, channel="chrome")
 
-        # Fetch the corrected user agent string
-        corrected_ua = await _get_corrected_user_agent(browser)
-
         # Realistic browser context
         context = await browser.new_context(
             viewport={"width": 1280, "height": 800},
@@ -68,7 +73,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             storage_state=(
                 STORAGE_STATE_PATH if os.path.exists(STORAGE_STATE_PATH) else None
             ),
-            user_agent=corrected_ua,
+            user_agent=get_user_agent(),
         )
 
         page = await context.new_page()
@@ -140,9 +145,6 @@ async def _playwright_book_court(booking_info) -> str:
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True, channel="chrome")
 
-        # Fetch the corrected user agent string
-        corrected_ua = await _get_corrected_user_agent(browser)
-
         context = await browser.new_context(
             viewport={"width": 1280, "height": 800},
             locale="en-NZ",
@@ -150,7 +152,7 @@ async def _playwright_book_court(booking_info) -> str:
             storage_state=(
                 STORAGE_STATE_PATH if os.path.exists(STORAGE_STATE_PATH) else None
             ),
-            user_agent=corrected_ua,
+            user_agent=get_user_agent(),
         )
 
         page = await context.new_page()
