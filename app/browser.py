@@ -172,7 +172,9 @@ async def _playwright_book_court(booking_info) -> str:
             # Extract signed URL from HTML
             match = re.search(r'data-url="([^"]+)"', payment_page_html)
             if not match:
-                raise RuntimeError("COURT PAYMENT FAILED: could not find signed payment URL")
+                raise RuntimeError(
+                    "COURT PAYMENT FAILED: could not find signed payment URL"
+                )
 
             signed_payment_url = match.group(1).replace("&amp;", "&")
             return signed_payment_url
@@ -188,7 +190,3 @@ async def _playwright_book_court(booking_info) -> str:
 
 def browser_book_court(booking_info: dict) -> str:
     return asyncio.run(_playwright_book_court(booking_info))
-
-
-#### TODO: CHECK IF BROWSWER STATE IS OKAY? HEADLESS CHROME - DOES IT HAVE TO OPEN, WILL IT WORK IN AWS?
-#### TODO: clean up codebase, refactor everything as necessary. redeploy to aws, check other files needed to upload to s3 bucket (cookies?), make pipeline for github to aws auto deploy?

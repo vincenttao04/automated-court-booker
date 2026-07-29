@@ -20,8 +20,7 @@ def main():
 
         session = login()
 
-        # if not is_near_target():
-        if is_near_target():
+        if not is_near_target():
             logout(session)
             print("================== FINISH ==================")
             return
