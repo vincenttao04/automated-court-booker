@@ -34,6 +34,20 @@ async def human_pause(min_s: float, max_s: float) -> None:
     await asyncio.sleep(random.uniform(min_s, max_s))
 
 
+# TODO
+# Helper function: simulate human-like typing by pressing keys sequentially
+
+
+# Helper function: fetch the corrected user agent string
+# Removes the "Headless" token from default user agent reported by Playwright
+async def _get_corrected_user_agent(browser) -> str:
+    temp_context = await browser.new_context()
+    temp_page = await temp_context.new_page()
+    raw_ua = await temp_page.evaluate("navigator.userAgent")
+    await temp_context.close()
+    return raw_ua.replace("HeadlessChrome/", "Chrome/")
+
+
 async def _playwright_login(user_number: str, user_password: str) -> dict:
     if not LOGIN_API or not LOGIN_URL or not SCHEDULE_URL:
         raise RuntimeError(
@@ -41,7 +55,10 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
         )
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False, channel="chrome")
+        browser = await p.chromium.launch(headless=True, channel="chrome")
+
+        # Fetch the corrected user agent string
+        corrected_ua = await _get_corrected_user_agent(browser)
 
         # Realistic browser context
         context = await browser.new_context(
@@ -51,6 +68,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             storage_state=(
                 STORAGE_STATE_PATH if os.path.exists(STORAGE_STATE_PATH) else None
             ),
+            user_agent=corrected_ua,
         )
 
         page = await context.new_page()
