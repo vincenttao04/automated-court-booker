@@ -75,7 +75,17 @@ def login() -> requests.Session:
             "LOGIN FAILED: missing env variable(s) - USER_NUMBER and/or USER_PASSWORD"
         )
 
-    data = browser_login(user_number, user_password)
+    data = {}
+
+    # Login with browser automation; retry once if it fails
+    for attempt in range(1, 3):
+        try:
+            data = browser_login(user_number, user_password)
+            break
+        except Exception as e:
+            print(f"login attempt {attempt} failed: {e}")
+            if attempt == 2:
+                raise RuntimeError(f"LOGIN FAILED after 2 attempts: {e}")
 
     # Create request session
     session = create_session()
