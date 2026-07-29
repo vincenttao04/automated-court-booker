@@ -209,9 +209,7 @@ PRIORITY_HANDLER = {
 }
 
 
-def book_court(
-    session: requests.Session, booking_info: BookingInformation
-) -> tuple[int, int]:
+def book_court(session: requests.Session, booking_info: BookingInformation) -> str:
     # # Fetch request payload
     # url = os.getenv("BOOKING_API")
     # if not url:
@@ -240,9 +238,7 @@ def book_court(
     )  # returns user_id and booking_id as integers
 
 
-def pay_court(
-    session: requests.Session, user_id: int, booking_id: int, count: int
-) -> None:
+def pay_court(session: requests.Session, signed_payment_url: str, count: int) -> None:
     # # Fetch request payload
     # payment_api = os.getenv("PAYMENT_API")
     # if not payment_api:
@@ -270,32 +266,47 @@ def pay_court(
 
     # return
 
+    ########################
     # Fetch request payload
-    payment_api = os.getenv("PAYMENT_API")
-    if not payment_api:
-        raise RuntimeError(
-            "COURT PAYMENT FAILED: missing env variable(s) - PAYMENT_API"
-        )
-    url = f"{payment_api}?user_id={user_id}&order_id={booking_id}"  # requires user id and booking id (..?user_id={user_id}&order_id={booking_id})
+    # payment_api = os.getenv("PAYMENT_API")
+    # if not payment_api:
+    #     raise RuntimeError(
+    #         "COURT PAYMENT FAILED: missing env variable(s) - PAYMENT_API"
+    #     )
+    # url = f"{payment_api}?user_id={user_id}&order_id={booking_id}"  # requires user id and booking id (..?user_id={user_id}&order_id={booking_id})
 
-    print(f"payment url: {url}")  # temp
+    # print(f"payment url: {url}")  # temp
 
+    # try:
+    #     response = session.get(url, timeout=15)
+    #     print(f"payment response: {response.text[:500]}")
+    # except requests.RequestException as e:
+    #     raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
+
+    # match = re.search(r'data-url="([^"]+)"', response.text)
+    # if not match:
+    #     raise RuntimeError("COURT PAYMENT FAILED: could not find signed payment URL")
+
+    # signed_url = match.group(1).replace("&amp;", "&")
+
+    # print(f"signed url: {signed_url}")  # temp
+
+    # try:
+    #     payment_response = session.get(signed_url, timeout=15)
+    # except requests.RequestException as e:
+    #     raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
+
+    # if "Payment Success" not in payment_response.text:
+    #     error_message = extract_payment_error(payment_response.text)
+    #     raise RuntimeError(f"COURT PAYMENT FAILED: {error_message or 'Unknown error'}")
+
+    # print(
+    #     f"({count}) court payment successful - check email for confirmation/receipt\n"
+    # )
+
+    #### attempt 3:
     try:
-        response = session.get(url, timeout=15)
-        print(f"payment response: {response.text[:500]}")
-    except requests.RequestException as e:
-        raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
-
-    match = re.search(r'data-url="([^"]+)"', response.text)
-    if not match:
-        raise RuntimeError("COURT PAYMENT FAILED: could not find signed payment URL")
-
-    signed_url = match.group(1).replace("&amp;", "&")
-
-    print(f"signed url: {signed_url}")  # temp
-
-    try:
-        payment_response = session.get(signed_url, timeout=15)
+        payment_response = session.get(signed_payment_url, timeout=15)
     except requests.RequestException as e:
         raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
 
@@ -316,11 +327,11 @@ def book_all_available(
     count = 1
     while booking_info is not None:
         try:
-            user_id, booking_id = book_court(session, booking_info)
+            signed_payment_url = book_court(session, booking_info)
 
-            print(f"user_id: {user_id}, booking_id: {booking_id}")  # temp
+            # print(f"user_id: {user_id}, booking_id: {booking_id}")  # temp
 
-            pay_court(session, user_id, booking_id, count)
+            pay_court(session, signed_payment_url, count)
             schedule = get_court_schedule(session, criteria)
             booking_info = identify_courts(schedule, criteria)
             count += 1

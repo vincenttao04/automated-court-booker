@@ -117,7 +117,7 @@ def browser_login(user_number: str, user_password: str) -> dict:
 BOOKING_INFO_PATH = "/payment/booking-info"
 
 
-async def _playwright_book_court(booking_info: dict) -> tuple[int, int]:
+async def _playwright_book_court(booking_info) -> str:
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False, channel="chrome")
 
@@ -154,7 +154,38 @@ async def _playwright_book_court(booking_info: dict) -> tuple[int, int]:
 
             check_status(data, "CREATE BOOKING")
 
-            return data["data"]["user_id"], data["data"]["id"]
+            user_id = data["data"]["user_id"]
+            booking_id = data["data"]["id"]
+
+            ##
+            payment_api = os.getenv("PAYMENT_API")
+            payment_url = f"{payment_api}?user_id={user_id}&order_id={booking_id}"
+
+            payment_page_html = await page.evaluate(
+                """
+                async (url) => {
+                    const res = await fetch(url);
+                    return await res.text();
+                }
+            """,
+                payment_url,
+            )
+
+            print(f"payment page response: {payment_page_html[:500]}")  # temporary
+
+            # Extract signed URL from HTML
+            import re
+
+            match = re.search(r'data-url="([^"]+)"', payment_page_html)
+            if not match:
+                raise RuntimeError(
+                    "COURT PAYMENT FAILED: could not find signed payment URL"
+                )
+
+            signed_payment_url = match.group(1).replace("&amp;", "&")
+            print(f"signed url found: {signed_payment_url[:50]}...")
+
+            return signed_payment_url
 
         except PlaywrightTimeoutError as e:
             raise RuntimeError(f"PLAYWRIGHT BOOK COURT: timed out - {e}")
@@ -165,7 +196,7 @@ async def _playwright_book_court(booking_info: dict) -> tuple[int, int]:
             await browser.close()
 
 
-def browser_book_court(booking_info: dict) -> tuple[int, int]:
+def browser_book_court(booking_info: dict) -> str:
     return asyncio.run(_playwright_book_court(booking_info))
 
 
