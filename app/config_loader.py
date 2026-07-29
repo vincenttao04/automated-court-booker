@@ -33,7 +33,13 @@ def load_config():
         except Exception as error:
             print(f"⚠: failed to load config from s3/aws: {error}")
             print("falling back to local config.json")
-    with open("config.json", "r") as config_file:  # "r" -> read mode
-        print("loading config from local file")
 
-        return json.load(config_file)
+    try:
+        with open("config.json", "r") as config_file:  # "r" -> read mode
+            print("loading config from local file")
+
+            return json.load(config_file)
+    except FileNotFoundError:
+        raise RuntimeError("LOAD CONFIG FAILED: config.json not found")
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"LOAD CONFIG FAILED: invalid JSON in config.json - {e}")

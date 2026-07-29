@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 # Local Application Imports
 from app.constants import Priority
 from app.models import BookingCriteria, BookingInformation
+from app.utils import check_status
+from app.browser import browser_book_court
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -63,15 +65,23 @@ def get_court_schedule(
     criteria: BookingCriteria,
 ) -> dict:
     # Fetch request payload
-    url = f"{os.getenv('COURT_SCHEDULE')}{criteria.date}"
+    court_schedule_api = os.getenv("COURT_SCHEDULE_API")
+    if not court_schedule_api:
+        raise RuntimeError(
+            "FETCH COURT AVAILABILITY FAILED: missing env variable(s) - COURT_SCHEDULE_API"
+        )
+    url = f"{court_schedule_api}{criteria.date}"
 
     # Make fetch court availability GET request
-    response = session.get(url, timeout=15)
+    try:
+        response = session.get(url, timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"FETCH COURT AVAILABILITY FAILED: network error - {e}")
+
     data = response.json()
 
     # Check if fetch court availability was successful
-    if data.get("status") != "success":
-        raise Exception("FETCH COURT AVAILABILITY FAILED")
+    check_status(data, "FETCH COURT AVAILABILITY")
 
     print(
         f"fetch court schedule: {criteria.location_name}, {criteria.date}, between {criteria.start_time} and {criteria.end_time}"
@@ -199,47 +209,48 @@ PRIORITY_HANDLER = {
 }
 
 
-def book_court(
-    session: requests.Session, booking_info: BookingInformation
-) -> tuple[int, int]:
-    # Fetch request_one payload
-    url = os.getenv("BOOKING_URL")
-    if not url:
-        raise RuntimeError("Book Court: Missing env variables")
+def book_court(session: requests.Session, booking_info: BookingInformation) -> str:
+    # # Fetch request payload
+    # url = os.getenv("BOOKING_API")
+    # if not url:
+    #     raise RuntimeError(
+    #         "CREATE BOOKING FAILED: missing env variable(s) - BOOKING_API"
+    #     )
 
-    # Make booking_create POST request
-    response = session.post(url, json=asdict(booking_info), timeout=15)
-    data = response.json()
+    # # Make booking_create POST request
+    # try:
+    #     response = session.post(url, json=asdict(booking_info), timeout=15)
+    # except requests.RequestException as e:
+    #     raise RuntimeError(f"CREATE BOOKING FAILED: network error - {e}")
 
-    # Check if booking_create was successful
-    if data.get("status") != "success":
-        raise Exception("CREATE BOOKING FAILED")
+    # data = response.json()
 
-    return (
-        data["data"]["user_id"],
-        data["data"]["id"],
+    # # Check if booking_create was successful
+    # check_status(data, "CREATE BOOKING")
+
+    # return (
+    #     data["data"]["user_id"],
+    #     data["data"]["id"],
+    # )  # returns user_id and booking_id as integers
+
+    return browser_book_court(
+        asdict(booking_info)
     )  # returns user_id and booking_id as integers
 
 
-def pay_court(
-    session: requests.Session, user_id: int, booking_id: int, count: int
-) -> None:
-    # Fetch request payload
-    url = f"{os.getenv('PAYMENT_URL')}{user_id}/{booking_id}"
+def pay_court(session: requests.Session, signed_payment_url: str, count: int) -> None:
+    try:
+        payment_response = session.get(signed_payment_url, timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
 
-    # Make court payment GET request; Response Content-Type: text/html; charset=UTF-8
-    response = session.get(url, timeout=15)
-
-    # Check if court payment was successful
-    if "Payment Success" not in response.text:
-        error_message = extract_payment_error(response.text)
-        raise Exception(error_message or "Unknown payment error")
+    if "Payment Success" not in payment_response.text:
+        error_message = extract_payment_error(payment_response.text)
+        raise RuntimeError(f"COURT PAYMENT FAILED: {error_message or 'Unknown error'}")
 
     print(
         f"({count}) court payment successful - check email for confirmation/receipt\n"
     )
-
-    return
 
 
 def book_all_available(
@@ -250,11 +261,14 @@ def book_all_available(
     count = 1
     while booking_info is not None:
         try:
-            user_id, booking_id = book_court(session, booking_info)
-            pay_court(session, user_id, booking_id, count)
+            signed_payment_url = book_court(session, booking_info)
+
+            # print(f"user_id: {user_id}, booking_id: {booking_id}")  # temp
+
+            pay_court(session, signed_payment_url, count)
             schedule = get_court_schedule(session, criteria)
             booking_info = identify_courts(schedule, criteria)
             count += 1
-        except Exception as e:
+        except RuntimeError as e:
             print(f"Error: {e}")
             break

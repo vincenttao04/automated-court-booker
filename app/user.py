@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 import requests
 from requests.adapters import HTTPAdapter
 
+# Local Application Imports
+from app.browser import browser_login
+from app.utils import check_status
+
 DEVICE_ID = "Badminton-Test-ABC-001"
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
@@ -40,17 +44,22 @@ def create_session():
 
 def fetch_user_detail(session: requests.Session, field: str) -> None:
     # Fetch request payload
-    url = os.getenv("USER_DATA")
+    url = os.getenv("USER_DATA_API")
     if not url:
-        raise RuntimeError("Fetch User Detail: Missing env variables")
+        raise RuntimeError(
+            "FETCH USER DETAIL FAILED: missing env variable(s) - USER_DATA_API"
+        )
 
     # Make fetch user detail GET request
-    response = session.get(url, timeout=15)
+    try:
+        response = session.get(url, timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"FETCH USER DETAIL FAILED: network error - {e}")
+
     data = response.json()
 
     # Check if fetch user detail was successful
-    if data.get("status") != "success":
-        raise Exception("FETCH USER DETAIL FAILED")
+    check_status(data, "FETCH USER DETAIL")
 
     print(f"{field}: {data['data'].get(field)}")
     return
@@ -58,30 +67,28 @@ def fetch_user_detail(session: requests.Session, field: str) -> None:
 
 def login() -> requests.Session:
     # Fetch request payload
-    url = os.getenv("LOGIN_URL")
     user_number = os.getenv("USER_NUMBER")
     user_password = os.getenv("USER_PASSWORD")
 
-    if not url or not user_number or not user_password:
-        raise RuntimeError("Login: Missing env variables")
+    if not user_number or not user_password:
+        raise RuntimeError(
+            "LOGIN FAILED: missing env variable(s) - USER_NUMBER and/or USER_PASSWORD"
+        )
 
-    payload = {
-        "number": user_number,
-        "password": user_password,
-        "device_id": DEVICE_ID,
-    }
+    data = {}
+
+    # Login with browser automation; retry once if it fails
+    for attempt in range(1, 3):
+        try:
+            data = browser_login(user_number, user_password)
+            break
+        except Exception as e:
+            print(f"login attempt {attempt} failed: {e}")
+            if attempt == 2:
+                raise RuntimeError(f"LOGIN FAILED after 2 attempts: {e}")
 
     # Create request session
     session = create_session()
-
-    # Make login POST request
-    response = session.post(url, json=payload, timeout=15)
-    data = response.json()
-
-    # Check if login was successful
-    if data.get("status") != "success":
-        raise Exception("LOGIN FAILED")
-
     # Update session headers with authentication token
     session.headers.update(
         {
@@ -104,19 +111,22 @@ def logout(session: requests.Session) -> None:
         time.sleep(10)
 
     # Fetch request payload
-    url = os.getenv("LOGOUT_URL")
+    url = os.getenv("LOGOUT_API")
     if not url:
-        raise RuntimeError("Logout: Missing env variables")
+        raise RuntimeError("LOGOUT FAILED: missing env variable(s) - LOGOUT_API")
 
     payload = {"device_id": DEVICE_ID}
 
     # Make logout POST request
-    response = session.post(url, json=payload, timeout=15)
+    try:
+        response = session.post(url, json=payload, timeout=15)
+    except requests.RequestException as e:
+        raise RuntimeError(f"LOGOUT FAILED: network error - {e}")
+
     data = response.json()
 
     # Check if logout was successful
-    if data.get("status") != "success":
-        raise Exception("LOGOUT FAILED")
+    check_status(data, "LOGOUT")
 
     print(f"logout successful: {os.getenv('USER_NUMBER')}\n")
     return

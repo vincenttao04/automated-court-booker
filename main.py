@@ -6,6 +6,7 @@ from app.user import create_session, login, logout
 
 def main():
     print("========== AUTOMATED COURT BOOKER ==========\n")
+
     criteria = fetch_criteria()
 
     if criteria is not None:

@@ -57,6 +57,10 @@ def is_near_target() -> bool:
 def fetch_criteria() -> BookingCriteria | None:
     config = load_config()
 
+    schedule = config.get("schedule")
+    if schedule is None:
+        raise RuntimeError("LOAD CONFIG FAILED: missing 'schedule' key in config")
+
     # Fetch user's booking preferences, add 1 day buffer
     now = datetime.now(NZ_TZ)
     day = (
@@ -66,9 +70,7 @@ def fetch_criteria() -> BookingCriteria | None:
         (now + timedelta(weeks=WEEKS_IN_ADVANCE, days=1)).date().isoformat()
     )  # e.g. '2024-07-15'
 
-    day_schedule = config["schedule"].get(
-        day
-    )  # e.g. {'start': '18:00', 'end': '20:00'}
+    day_schedule = schedule.get(day)  # e.g. {'start': '18:00', 'end': '20:00'}
     if not day_schedule:
         print(f"no booking scheduled for {day}")
         return None
@@ -79,5 +81,5 @@ def fetch_criteria() -> BookingCriteria | None:
         end_time=day_schedule.get("end", DEFAULT_END),
         location=Location(day_schedule.get("location", DEFAULT_LOCATION)),
         priority=Priority(day_schedule.get("priority", DEFAULT_PRIORITY)),
-        price=config["price_per_court"] or 27,
+        price=config.get("price_per_court") or 27,
     )
