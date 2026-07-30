@@ -3,6 +3,7 @@ import asyncio
 import os
 import random
 import re
+from dataclasses import asdict
 
 # Third-Party Libraries
 from playwright.async_api import (
@@ -13,6 +14,8 @@ from dotenv import load_dotenv
 
 # Local Application Imports
 from app.utils import check_status
+from app.models import BookingInformation
+
 
 import json
 import urllib.parse
@@ -38,10 +41,12 @@ async def human_pause(min_s: float, max_s: float) -> None:
 # Helper function: simulate human-like typing by pressing keys sequentially
 
 
+_cached_user_agent: str | None = None
+
+
 # Helper function: fetch the corrected user agent string
 # Removes the "Headless" token from default user agent reported by Playwright
 async def _fetch_user_agent() -> str:
-    print("fetching user agent.....................................")  ## temp
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True, channel="chrome")
         context = await browser.new_context()
@@ -52,11 +57,17 @@ async def _fetch_user_agent() -> str:
     return raw_ua.replace("HeadlessChrome/", "Chrome/")
 
 
+# Helper function: get the cached user agent string, or fetch it if not cached
 def get_user_agent() -> str:
-    return asyncio.run(_fetch_user_agent())
+    global _cached_user_agent
+    if _cached_user_agent is None:
+        _cached_user_agent = asyncio.run(_fetch_user_agent())
+    return _cached_user_agent
 
 
-async def _playwright_login(user_number: str, user_password: str) -> dict:
+async def _playwright_login(
+    user_number: str, user_password: str, user_agent: str
+) -> dict:
     if not LOGIN_API or not LOGIN_URL or not SCHEDULE_URL:
         raise RuntimeError(
             "PLAYWRIGHT LOGIN FAILED: missing env variable(s) - LOGIN_API, LOGIN_URL and/or SCHEDULE_URL"
@@ -73,7 +84,7 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
             storage_state=(
                 STORAGE_STATE_PATH if os.path.exists(STORAGE_STATE_PATH) else None
             ),
-            user_agent=get_user_agent(),
+            user_agent=user_agent,
         )
 
         page = await context.new_page()
@@ -135,13 +146,15 @@ async def _playwright_login(user_number: str, user_password: str) -> dict:
 
 
 def browser_login(user_number: str, user_password: str) -> dict:
-    return asyncio.run(_playwright_login(user_number, user_password))
+    return asyncio.run(_playwright_login(user_number, user_password, get_user_agent()))
 
 
 BOOKING_INFO_PATH = "/payment/booking-info"
 
 
-async def _playwright_book_court(booking_info) -> str:
+async def _playwright_book_court(
+    booking_info: BookingInformation, user_agent: str
+) -> str:
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True, channel="chrome")
 
@@ -152,7 +165,7 @@ async def _playwright_book_court(booking_info) -> str:
             storage_state=(
                 STORAGE_STATE_PATH if os.path.exists(STORAGE_STATE_PATH) else None
             ),
-            user_agent=get_user_agent(),
+            user_agent=user_agent,
         )
 
         page = await context.new_page()
@@ -161,7 +174,7 @@ async def _playwright_book_court(booking_info) -> str:
         try:
             # Build booking info page URL
             encoded_data = urllib.parse.quote(
-                json.dumps(booking_info, separators=(",", ":"))
+                json.dumps(asdict(booking_info), separators=(",", ":"))
             )
             url = f"{SCHEDULE_URL}{BOOKING_INFO_PATH}?data={encoded_data}"
 
@@ -212,5 +225,5 @@ async def _playwright_book_court(booking_info) -> str:
             await browser.close()
 
 
-def browser_book_court(booking_info: dict) -> str:
-    return asyncio.run(_playwright_book_court(booking_info))
+def browser_book_court(booking_info: BookingInformation) -> str:
+    return asyncio.run(_playwright_book_court(booking_info, get_user_agent()))
