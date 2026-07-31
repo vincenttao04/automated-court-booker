@@ -11,6 +11,7 @@ from dataclasses import asdict
 from dotenv import load_dotenv
 from playwright.async_api import (
     async_playwright,
+    Locator,
     TimeoutError as PlaywrightTimeoutError,
 )
 
@@ -58,6 +59,10 @@ async def human_pause(min_s: float, max_s: float) -> None:
 
 # TODO
 # Helper function: simulate human-like typing by pressing keys sequentially
+async def human_type(locator: Locator, text: str, min_s: float, max_s: float) -> None:
+    for char in text:
+        await locator.press_sequentially(char)
+        await human_pause(min_s, max_s)
 
 
 async def _playwright_login(
@@ -105,13 +110,9 @@ async def _playwright_login(
 
             # Fill in credentials with human-like typing and behaviour
             await human_pause(0.5, 1.2)
-            for char in user_number:
-                await number.press_sequentially(char)
-                await human_pause(0.06, 0.1)
+            await human_type(number, user_number, 0.06, 0.1)
             await human_pause(0.3, 0.8)
-            for char in user_password:
-                await password.press_sequentially(char)
-                await human_pause(0.08, 0.12)
+            await human_type(password, user_password, 0.08, 0.12)
             await human_pause(0.4, 1.0)
 
             # Capture the login API response
