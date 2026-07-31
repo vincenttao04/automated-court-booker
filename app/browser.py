@@ -23,23 +23,11 @@ import urllib.parse
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
 
-LOGIN_API = os.getenv("LOGIN_API")
 LOGIN_URL = os.getenv("LOGIN_URL")
+LOGIN_API = os.getenv("LOGIN_API")
 SCHEDULE_URL = os.getenv("SCHEDULE_URL")
+BOOKING_API = os.getenv("BOOKING_API")
 STORAGE_STATE_PATH = "browser_state.json"
-
-BOOKING_CONFIRM_PATH = "/payment/booking-confirm"  ## TODO
-BOOKING_API_PATH = "/api/v1/bookings/create"  ## TODO
-
-
-# Helper function: simulate human-like pause for a random duration
-async def human_pause(min_s: float, max_s: float) -> None:
-    await asyncio.sleep(random.uniform(min_s, max_s))
-
-
-# TODO
-# Helper function: simulate human-like typing by pressing keys sequentially
-
 
 _cached_user_agent: str | None = None
 
@@ -63,6 +51,15 @@ def get_user_agent() -> str:
     if _cached_user_agent is None:
         _cached_user_agent = asyncio.run(_fetch_user_agent())
     return _cached_user_agent
+
+
+# Helper function: simulate human-like pause for a random duration
+async def human_pause(min_s: float, max_s: float) -> None:
+    await asyncio.sleep(random.uniform(min_s, max_s))
+
+
+# TODO
+# Helper function: simulate human-like typing by pressing keys sequentially
 
 
 async def _playwright_login(
@@ -183,7 +180,7 @@ async def _playwright_book_court(
 
             # Capture the create booking API response
             async with page.expect_response(
-                lambda r: BOOKING_API_PATH in r.url and r.request.method == "POST",
+                lambda r: r.url == BOOKING_API and r.request.method == "POST",
             ) as response_info:
                 await page.click('button:has-text("Continue")')
 
