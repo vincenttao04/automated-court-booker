@@ -89,6 +89,7 @@ def login() -> requests.Session:
 
     # Create request session
     session = create_session()
+    
     # Update session headers with authentication token
     session.headers.update(
         {

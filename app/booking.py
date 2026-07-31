@@ -208,18 +208,21 @@ PRIORITY_HANDLER = {
 }
 
 
-def book_court(session: requests.Session, booking_info: BookingInformation) -> str:
+def book_court(booking_info: BookingInformation) -> str:
+    # Book court with browser automation
     return browser_book_court(
         booking_info
     )  # returns user_id and booking_id as integers
 
 
 def pay_court(session: requests.Session, signed_payment_url: str, count: int) -> None:
+    # Make court payment GET request
     try:
         payment_response = session.get(signed_payment_url, timeout=15)
     except requests.RequestException as e:
         raise RuntimeError(f"COURT PAYMENT FAILED: network error - {e}")
 
+    # Check if court payment was successful
     if "Payment Success" not in payment_response.text:
         error_message = extract_payment_error(payment_response.text)
         raise RuntimeError(f"COURT PAYMENT FAILED: {error_message or 'Unknown error'}")
@@ -237,7 +240,7 @@ def book_all_available(
     count = 1
     while booking_info is not None:
         try:
-            signed_payment_url = book_court(session, booking_info)
+            signed_payment_url = book_court(booking_info)
             pay_court(session, signed_payment_url, count)
             schedule = get_court_schedule(session, criteria)
             booking_info = identify_courts(schedule, criteria)

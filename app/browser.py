@@ -152,6 +152,7 @@ async def _playwright_book_court(
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True, channel="chrome")
 
+        # Realistic browser context
         context = await browser.new_context(
             viewport={"width": 1280, "height": 800},
             locale="en-NZ",
@@ -163,7 +164,7 @@ async def _playwright_book_court(
         )
 
         page = await context.new_page()
-        page.set_default_timeout(30_000)
+        page.set_default_timeout(30_000)  # 30 seconds
 
         try:
             # Build booking info page URL
@@ -172,6 +173,7 @@ async def _playwright_book_court(
             )
             url = f"{SCHEDULE_URL}/payment/booking-info?data={encoded_data}"
 
+            # Navigate to booking create page
             await page.goto(url, wait_until="networkidle")
             await human_pause(1.5, 2.5)
 
