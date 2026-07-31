@@ -1,7 +1,6 @@
 # Standard Library
 import os
 import re
-from dataclasses import asdict
 
 # Third-Party Libraries
 import requests
@@ -210,29 +209,6 @@ PRIORITY_HANDLER = {
 
 
 def book_court(session: requests.Session, booking_info: BookingInformation) -> str:
-    # # Fetch request payload
-    # url = os.getenv("BOOKING_API")
-    # if not url:
-    #     raise RuntimeError(
-    #         "CREATE BOOKING FAILED: missing env variable(s) - BOOKING_API"
-    #     )
-
-    # # Make booking_create POST request
-    # try:
-    #     response = session.post(url, json=asdict(booking_info), timeout=15)
-    # except requests.RequestException as e:
-    #     raise RuntimeError(f"CREATE BOOKING FAILED: network error - {e}")
-
-    # data = response.json()
-
-    # # Check if booking_create was successful
-    # check_status(data, "CREATE BOOKING")
-
-    # return (
-    #     data["data"]["user_id"],
-    #     data["data"]["id"],
-    # )  # returns user_id and booking_id as integers
-
     return browser_book_court(
         booking_info
     )  # returns user_id and booking_id as integers
@@ -262,9 +238,6 @@ def book_all_available(
     while booking_info is not None:
         try:
             signed_payment_url = book_court(session, booking_info)
-
-            # print(f"user_id: {user_id}, booking_id: {booking_id}")  # temp
-
             pay_court(session, signed_payment_url, count)
             schedule = get_court_schedule(session, criteria)
             booking_info = identify_courts(schedule, criteria)

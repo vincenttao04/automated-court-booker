@@ -146,9 +146,6 @@ def browser_login(user_number: str, user_password: str) -> dict:
     return asyncio.run(_playwright_login(user_number, user_password, get_user_agent()))
 
 
-BOOKING_INFO_PATH = "/payment/booking-info"
-
-
 async def _playwright_book_court(
     booking_info: BookingInformation, user_agent: str
 ) -> str:
@@ -173,7 +170,7 @@ async def _playwright_book_court(
             encoded_data = urllib.parse.quote(
                 json.dumps(asdict(booking_info), separators=(",", ":"))
             )
-            url = f"{SCHEDULE_URL}{BOOKING_INFO_PATH}?data={encoded_data}"
+            url = f"{SCHEDULE_URL}/payment/booking-info?data={encoded_data}"
 
             await page.goto(url, wait_until="networkidle")
             await human_pause(1.5, 2.5)
@@ -189,11 +186,7 @@ async def _playwright_book_court(
 
             check_status(data, "CREATE BOOKING")
 
-            user_id = data["data"]["user_id"]
-            booking_id = data["data"]["id"]
-
-            # temp logs
-            # click "pay now" button
+            # Navigate to the payment page and click the "Pay Now" button
             await page.wait_for_selector('button:has-text("Pay Now")', timeout=30_000)
             await human_pause(1.0, 2.0)
             await page.click('button:has-text("Pay Now")')
