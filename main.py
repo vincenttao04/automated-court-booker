@@ -1,5 +1,5 @@
 # Local Application Imports
-from app.booking import book_all_available, identify_courts, get_court_schedule
+from app.booking import book_all_available, get_court_schedule, identify_courts
 from app.scheduler import fetch_criteria, is_near_target
 from app.user import create_session, login, logout
 

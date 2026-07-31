@@ -1,45 +1,32 @@
 # Standard Library
 import asyncio
+import json
 import os
 import random
 import re
+import urllib.parse
 from dataclasses import asdict
 
 # Third-Party Libraries
+from dotenv import load_dotenv
 from playwright.async_api import (
     async_playwright,
+    Locator,
     TimeoutError as PlaywrightTimeoutError,
 )
-from dotenv import load_dotenv
 
 # Local Application Imports
-from app.utils import check_status
 from app.models import BookingInformation
-
-
-import json
-import urllib.parse
+from app.utils import check_status
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
 
-LOGIN_API = os.getenv("LOGIN_API")
 LOGIN_URL = os.getenv("LOGIN_URL")
+LOGIN_API = os.getenv("LOGIN_API")
 SCHEDULE_URL = os.getenv("SCHEDULE_URL")
+BOOKING_API = os.getenv("BOOKING_API")
 STORAGE_STATE_PATH = "browser_state.json"
-
-BOOKING_CONFIRM_PATH = "/payment/booking-confirm"  ## TODO
-BOOKING_API_PATH = "/api/v1/bookings/create"  ## TODO
-
-
-# Helper function: simulate human-like pause for a random duration
-async def human_pause(min_s: float, max_s: float) -> None:
-    await asyncio.sleep(random.uniform(min_s, max_s))
-
-
-# TODO
-# Helper function: simulate human-like typing by pressing keys sequentially
-
 
 _cached_user_agent: str | None = None
 
@@ -63,6 +50,19 @@ def get_user_agent() -> str:
     if _cached_user_agent is None:
         _cached_user_agent = asyncio.run(_fetch_user_agent())
     return _cached_user_agent
+
+
+# Helper function: simulate human-like pause for a random duration
+async def human_pause(min_s: float, max_s: float) -> None:
+    await asyncio.sleep(random.uniform(min_s, max_s))
+
+
+# TODO
+# Helper function: simulate human-like typing by pressing keys sequentially
+async def human_type(locator: Locator, text: str, min_s: float, max_s: float) -> None:
+    for char in text:
+        await locator.press_sequentially(char)
+        await human_pause(min_s, max_s)
 
 
 async def _playwright_login(
@@ -110,13 +110,9 @@ async def _playwright_login(
 
             # Fill in credentials with human-like typing and behaviour
             await human_pause(0.5, 1.2)
-            for char in user_number:
-                await number.press_sequentially(char)
-                await human_pause(0.06, 0.1)
+            await human_type(number, user_number, 0.06, 0.1)
             await human_pause(0.3, 0.8)
-            for char in user_password:
-                await password.press_sequentially(char)
-                await human_pause(0.08, 0.12)
+            await human_type(password, user_password, 0.08, 0.12)
             await human_pause(0.4, 1.0)
 
             # Capture the login API response
@@ -149,15 +145,13 @@ def browser_login(user_number: str, user_password: str) -> dict:
     return asyncio.run(_playwright_login(user_number, user_password, get_user_agent()))
 
 
-BOOKING_INFO_PATH = "/payment/booking-info"
-
-
 async def _playwright_book_court(
     booking_info: BookingInformation, user_agent: str
 ) -> str:
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True, channel="chrome")
 
+        # Realistic browser context
         context = await browser.new_context(
             viewport={"width": 1280, "height": 800},
             locale="en-NZ",
@@ -169,21 +163,22 @@ async def _playwright_book_court(
         )
 
         page = await context.new_page()
-        page.set_default_timeout(30_000)
+        page.set_default_timeout(30_000)  # 30 seconds
 
         try:
             # Build booking info page URL
             encoded_data = urllib.parse.quote(
                 json.dumps(asdict(booking_info), separators=(",", ":"))
             )
-            url = f"{SCHEDULE_URL}{BOOKING_INFO_PATH}?data={encoded_data}"
+            url = f"{SCHEDULE_URL}/payment/booking-info?data={encoded_data}"
 
+            # Navigate to booking create page
             await page.goto(url, wait_until="networkidle")
             await human_pause(1.5, 2.5)
 
             # Capture the create booking API response
             async with page.expect_response(
-                lambda r: BOOKING_API_PATH in r.url and r.request.method == "POST",
+                lambda r: r.url == BOOKING_API and r.request.method == "POST",
             ) as response_info:
                 await page.click('button:has-text("Continue")')
 
@@ -192,11 +187,7 @@ async def _playwright_book_court(
 
             check_status(data, "CREATE BOOKING")
 
-            user_id = data["data"]["user_id"]
-            booking_id = data["data"]["id"]
-
-            # temp logs
-            # click "pay now" button
+            # Navigate to the payment page and click the "Pay Now" button
             await page.wait_for_selector('button:has-text("Pay Now")', timeout=30_000)
             await human_pause(1.0, 2.0)
             await page.click('button:has-text("Pay Now")')
