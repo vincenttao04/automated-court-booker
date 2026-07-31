@@ -57,7 +57,6 @@ async def human_pause(min_s: float, max_s: float) -> None:
     await asyncio.sleep(random.uniform(min_s, max_s))
 
 
-# TODO
 # Helper function: simulate human-like typing by pressing keys sequentially
 async def human_type(locator: Locator, text: str, min_s: float, max_s: float) -> None:
     for char in text:
@@ -74,7 +73,7 @@ async def _playwright_login(
         )
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, channel="chrome")
+        browser = await p.chromium.launch(headless=False, channel="chrome")
 
         # Realistic browser context
         context = await browser.new_context(
@@ -96,7 +95,7 @@ async def _playwright_login(
                 SCHEDULE_URL,
                 wait_until="networkidle",
             )
-            await human_pause(1.5, 2.5)
+            await human_pause(1.0, 1.75)
 
             # Navigate to login page
             await page.goto(
@@ -109,11 +108,11 @@ async def _playwright_login(
             password = page.locator('input[type="password"]')
 
             # Fill in credentials with human-like typing and behaviour
-            await human_pause(0.5, 1.2)
-            await human_type(number, user_number, 0.06, 0.1)
-            await human_pause(0.3, 0.8)
-            await human_type(password, user_password, 0.08, 0.12)
-            await human_pause(0.4, 1.0)
+            await human_pause(0.8, 1.2)
+            await human_type(number, user_number, 0.05, 0.08)
+            await human_pause(0.3, 0.6)
+            await human_type(password, user_password, 0.07, 0.1)
+            await human_pause(0.4, 0.7)
 
             # Capture the login API response
             async with page.expect_response(
@@ -174,7 +173,7 @@ async def _playwright_book_court(
 
             # Navigate to booking create page
             await page.goto(url, wait_until="networkidle")
-            await human_pause(1.5, 2.5)
+            await human_pause(1.0, 1.75)
 
             # Capture the create booking API response
             async with page.expect_response(
@@ -189,11 +188,12 @@ async def _playwright_book_court(
 
             # Navigate to the payment page and click the "Pay Now" button
             await page.wait_for_selector('button:has-text("Pay Now")', timeout=30_000)
-            await human_pause(1.0, 2.0)
+            await human_pause(1.0, 1.75)
+
             await page.click('button:has-text("Pay Now")')
 
             await page.wait_for_load_state("networkidle")
-            await human_pause(1.0, 2.0)
+            await human_pause(1.0, 1.75)
 
             payment_page_html = await page.content()
 
