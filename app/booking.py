@@ -3,14 +3,14 @@ import os
 import re
 
 # Third-Party Libraries
-import requests
 from dotenv import load_dotenv
+import requests
 
 # Local Application Imports
+from app.browser import browser_book_court
 from app.constants import Priority
 from app.models import BookingCriteria, BookingInformation
 from app.utils import check_status
-from app.browser import browser_book_court
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
@@ -202,6 +202,7 @@ def identify_longest_courts(
     return booking_info
 
 
+# Positioned here because it references the two identify_* functions above by name, which must already be defined.
 PRIORITY_HANDLER = {
     Priority.EARLIEST: identify_earliest_courts,
     Priority.LONGEST: identify_longest_courts,

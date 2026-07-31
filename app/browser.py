@@ -1,24 +1,22 @@
 # Standard Library
 import asyncio
+import json
 import os
 import random
 import re
+import urllib.parse
 from dataclasses import asdict
 
 # Third-Party Libraries
+from dotenv import load_dotenv
 from playwright.async_api import (
     async_playwright,
     TimeoutError as PlaywrightTimeoutError,
 )
-from dotenv import load_dotenv
 
 # Local Application Imports
-from app.utils import check_status
 from app.models import BookingInformation
-
-
-import json
-import urllib.parse
+from app.utils import check_status
 
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()

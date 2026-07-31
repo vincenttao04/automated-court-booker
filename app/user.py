@@ -11,8 +11,6 @@ from requests.adapters import HTTPAdapter
 from app.browser import browser_login, get_user_agent
 from app.utils import check_status
 
-DEVICE_ID = "Badminton-Test-ABC-001"
-
 if not os.getenv("AWS_LAMBDA_FUNCTION_NAME"):
     load_dotenv()
 
@@ -89,7 +87,7 @@ def login() -> requests.Session:
 
     # Create request session
     session = create_session()
-    
+
     # Update session headers with authentication token
     session.headers.update(
         {
@@ -116,7 +114,7 @@ def logout(session: requests.Session) -> None:
     if not url:
         raise RuntimeError("LOGOUT FAILED: missing env variable(s) - LOGOUT_API")
 
-    payload = {"device_id": DEVICE_ID}
+    payload = {"device_id": "Badminton-Test-ABC-001"}
 
     # Make logout POST request
     try:
