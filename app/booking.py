@@ -234,7 +234,7 @@ def book_court(session: requests.Session, booking_info: BookingInformation) -> s
     # )  # returns user_id and booking_id as integers
 
     return browser_book_court(
-        asdict(booking_info)
+        booking_info
     )  # returns user_id and booking_id as integers
 
 
