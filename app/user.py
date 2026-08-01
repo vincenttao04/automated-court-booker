@@ -82,6 +82,7 @@ def login() -> requests.Session:
             break
         except Exception as e:
             print(f"login attempt {attempt} failed: {e}")
+            print("")
             if attempt == 2:
                 raise RuntimeError(f"LOGIN FAILED after 2 attempts: {e}")
 
