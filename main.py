@@ -1,3 +1,6 @@
+# Standard Library
+import sys
+
 # Local Application Imports
 from app.booking import book_all_available, get_court_schedule, identify_courts
 from app.scheduler import fetch_criteria, is_near_target
@@ -34,4 +37,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except RuntimeError as e:
+        print(f"Error: {e}")
+        sys.exit(1)

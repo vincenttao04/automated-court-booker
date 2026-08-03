@@ -57,7 +57,6 @@ async def human_pause(min_s: float, max_s: float) -> None:
     await asyncio.sleep(random.uniform(min_s, max_s))
 
 
-# TODO
 # Helper function: simulate human-like typing by pressing keys sequentially
 async def human_type(locator: Locator, text: str, min_s: float, max_s: float) -> None:
     for char in text:
@@ -92,13 +91,15 @@ async def _playwright_login(
 
         try:
             # Warm up session - visit home page first before login
+            print("browser: warming up session")
             await page.goto(
                 SCHEDULE_URL,
                 wait_until="networkidle",
             )
-            await human_pause(1.5, 2.5)
+            await human_pause(1.0, 1.75)
 
             # Navigate to login page
+            print("browser: navigating to login page")
             await page.goto(
                 LOGIN_URL,
                 wait_until="networkidle",
@@ -109,13 +110,15 @@ async def _playwright_login(
             password = page.locator('input[type="password"]')
 
             # Fill in credentials with human-like typing and behaviour
-            await human_pause(0.5, 1.2)
-            await human_type(number, user_number, 0.06, 0.1)
-            await human_pause(0.3, 0.8)
-            await human_type(password, user_password, 0.08, 0.12)
-            await human_pause(0.4, 1.0)
+            print("browser: entering credentials")
+            await human_pause(0.8, 1.2)
+            await human_type(number, user_number, 0.05, 0.08)
+            await human_pause(0.3, 0.6)
+            await human_type(password, user_password, 0.07, 0.1)
+            await human_pause(0.4, 0.7)
 
             # Capture the login API response
+            print("browser: submitting login")
             async with page.expect_response(
                 lambda r: r.url == LOGIN_API and r.request.method == "POST",
             ) as response_info:
@@ -131,6 +134,7 @@ async def _playwright_login(
             await context.storage_state(path=STORAGE_STATE_PATH)
             await context.close()
             await browser.close()
+            print("")
 
     if not login_response_data:
         raise RuntimeError("PLAYWRIGHT LOGIN FAILED: no API response captured")
@@ -173,10 +177,12 @@ async def _playwright_book_court(
             url = f"{SCHEDULE_URL}/payment/booking-info?data={encoded_data}"
 
             # Navigate to booking create page
+            print("browser: loading booking page")
             await page.goto(url, wait_until="networkidle")
-            await human_pause(1.5, 2.5)
+            await human_pause(1.0, 1.75)
 
             # Capture the create booking API response
+            print("browser: creating booking")
             async with page.expect_response(
                 lambda r: r.url == BOOKING_API and r.request.method == "POST",
             ) as response_info:
@@ -188,12 +194,14 @@ async def _playwright_book_court(
             check_status(data, "CREATE BOOKING")
 
             # Navigate to the payment page and click the "Pay Now" button
+            print("browser: proceeding to payment")
             await page.wait_for_selector('button:has-text("Pay Now")', timeout=30_000)
-            await human_pause(1.0, 2.0)
+            await human_pause(1.0, 1.75)
+
             await page.click('button:has-text("Pay Now")')
 
             await page.wait_for_load_state("networkidle")
-            await human_pause(1.0, 2.0)
+            await human_pause(1.0, 1.75)
 
             payment_page_html = await page.content()
 
@@ -205,6 +213,7 @@ async def _playwright_book_court(
                 )
 
             signed_payment_url = match.group(1).replace("&amp;", "&")
+            print("browser: payment url retrieved")
             return signed_payment_url
 
         except PlaywrightTimeoutError as e:
@@ -214,6 +223,7 @@ async def _playwright_book_court(
             await context.storage_state(path=STORAGE_STATE_PATH)
             await context.close()
             await browser.close()
+            print("")
 
 
 def browser_book_court(booking_info: BookingInformation) -> str:
