@@ -1,5 +1,6 @@
 # Standard Library
 import sys
+from datetime import datetime
 
 # Local Application Imports
 from app.booking import book_all_available, get_court_schedule, identify_courts
@@ -8,7 +9,10 @@ from app.user import create_session, login, logout
 
 
 def main():
-    print("========== AUTOMATED COURT BOOKER ==========\n")
+    print(
+        f"{datetime.now().strftime("%a %d %B %H:%M:%S")}"
+    )  # format example: Mon 03 August 19:09:29
+    print("======== AUTOMATED COURT BOOKER ========\n")
 
     criteria = fetch_criteria()
 
@@ -18,21 +22,21 @@ def main():
         booking_info = identify_courts(public_schedule, criteria)
 
         if booking_info is None:
-            print("================= FINISH =================")
+            print("================ FINISH ================")
             return
 
         session = login()
 
         if not is_near_target():
             logout(session)
-            print("================== FINISH ==================")
+            print("================= FINISH =================")
             return
 
         book_all_available(session, criteria, booking_info)
 
         logout(session)
 
-    print("================= FINISH =================")
+    print("================ FINISH ================")
     return
 
 
