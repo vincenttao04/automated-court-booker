@@ -31,7 +31,7 @@ def load_config():
 
             return json.loads(content)
         except Exception as error:
-            print(f"⚠: failed to load config from s3/aws: {error}")
+            print(f"[error] failed to load config from s3/aws: {error}")
             print("falling back to local config.json")
 
     try:

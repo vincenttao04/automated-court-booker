@@ -22,7 +22,7 @@ from app.models import BookingCriteria
 def wait_until_target(wait_time: timedelta) -> bool:
     # If the wait time is more than 121 seconds, exit
     if wait_time > timedelta(seconds=121):
-        print(f"⚠ wait time exceeds 121 seconds\n")
+        print(f"[error] wait time exceeds 121 seconds\n")
         return False
 
     print("time until project runs: ", str(wait_time))
