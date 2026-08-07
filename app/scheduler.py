@@ -15,6 +15,7 @@ from app.constants import (
     Priority,
     TARGET_TIME,
     WEEKS_IN_ADVANCE,
+    DAYS_IN_ADVANCE,
 )
 from app.models import BookingCriteria
 
@@ -64,10 +65,14 @@ def fetch_criteria() -> BookingCriteria | None:
     # Fetch user's booking preferences, add 1 day buffer
     now = datetime.now(NZ_TZ)
     day = (
-        (now + timedelta(weeks=WEEKS_IN_ADVANCE, days=1)).strftime("%A").lower()
+        (now + timedelta(weeks=WEEKS_IN_ADVANCE, days=DAYS_IN_ADVANCE))
+        .strftime("%A")
+        .lower()
     )  # e.g. 'monday'
     date = (
-        (now + timedelta(weeks=WEEKS_IN_ADVANCE, days=1)).date().isoformat()
+        (now + timedelta(weeks=WEEKS_IN_ADVANCE, days=DAYS_IN_ADVANCE))
+        .date()
+        .isoformat()
     )  # e.g. '2024-07-15'
 
     day_schedule = schedule.get(day)  # e.g. {'start': '18:00', 'end': '20:00'}
