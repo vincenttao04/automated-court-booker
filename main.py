@@ -44,7 +44,7 @@ def main():
 
         if not is_near_target():
             logout(session)
-            print("================= FINISH =================")
+            print("================ FINISH ================")
             return
 
         book_all_available(session, criteria, booking_info)
