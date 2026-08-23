@@ -18,6 +18,9 @@ logs/
 .DS_Store
 Thumbs.db
 
+# Chrome profile (contains real browsing data)
+chrome_profile/
+
 # 
 package/
 lambda.zip
