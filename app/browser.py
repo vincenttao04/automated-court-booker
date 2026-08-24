@@ -26,7 +26,7 @@ LOGIN_URL = os.getenv("LOGIN_URL")
 LOGIN_API = os.getenv("LOGIN_API")
 SCHEDULE_URL = os.getenv("SCHEDULE_URL")
 BOOKING_API = os.getenv("BOOKING_API")
-STORAGE_STATE_PATH = "browser_state.json"
+CHROME_PROFILE_PATH = os.getenv("CHROME_PROFILE_PATH")
 
 _cached_user_agent: str | None = None
 
@@ -67,26 +67,24 @@ async def human_type(locator: Locator, text: str, min_s: float, max_s: float) ->
 async def _playwright_login(
     user_number: str, user_password: str, user_agent: str
 ) -> dict:
-    if not LOGIN_API or not LOGIN_URL or not SCHEDULE_URL:
+    if not LOGIN_API or not LOGIN_URL or not SCHEDULE_URL or not CHROME_PROFILE_PATH:
         raise RuntimeError(
-            "PLAYWRIGHT LOGIN FAILED: missing env variable(s) - LOGIN_API, LOGIN_URL and/or SCHEDULE_URL"
+            "PLAYWRIGHT LOGIN FAILED: missing env variable(s) - LOGIN_API, LOGIN_URL, SCHEDULE_URL and/or CHROME_PROFILE_PATH"
         )
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, channel="chrome")
-
-        # Realistic browser context
-        context = await browser.new_context(
+        # Persistent Chrome profile provides the browsing identity reCAPTCHA v3 scores on
+        context = await p.chromium.launch_persistent_context(
+            user_data_dir=CHROME_PROFILE_PATH,
+            headless=True,
+            channel="chrome",
             viewport={"width": 1280, "height": 800},
             locale="en-NZ",
             timezone_id="Pacific/Auckland",
-            storage_state=(
-                STORAGE_STATE_PATH if os.path.exists(STORAGE_STATE_PATH) else None
-            ),
             user_agent=user_agent,
         )
-
-        page = await context.new_page()
+        # A persistent context opens with a page already; reuse it instead of adding a blank tab
+        page = context.pages[0] if context.pages else await context.new_page()
         page.set_default_timeout(30_000)  # 30 seconds
 
         try:
@@ -131,9 +129,7 @@ async def _playwright_login(
             raise RuntimeError(f"PLAYWRIGHT LOGIN FAILED: timed out - {e}")
 
         finally:
-            await context.storage_state(path=STORAGE_STATE_PATH)
             await context.close()
-            await browser.close()
             print("")
 
     if not login_response_data:
@@ -152,21 +148,24 @@ def browser_login(user_number: str, user_password: str) -> dict:
 async def _playwright_book_court(
     booking_info: BookingInformation, user_agent: str
 ) -> str:
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, channel="chrome")
+    if not BOOKING_API or not SCHEDULE_URL or not CHROME_PROFILE_PATH:
+        raise RuntimeError(
+            "PLAYWRIGHT BOOK COURT FAILED: missing env variable(s) - BOOKING_API, SCHEDULE_URL and/or CHROME_PROFILE_PATH"
+        )
 
-        # Realistic browser context
-        context = await browser.new_context(
+    async with async_playwright() as p:
+        context = await p.chromium.launch_persistent_context(
+            # Persistent Chrome profile provides the browsing identity reCAPTCHA v3 scores on
+            user_data_dir=CHROME_PROFILE_PATH,
+            headless=True,
+            channel="chrome",
             viewport={"width": 1280, "height": 800},
             locale="en-NZ",
             timezone_id="Pacific/Auckland",
-            storage_state=(
-                STORAGE_STATE_PATH if os.path.exists(STORAGE_STATE_PATH) else None
-            ),
             user_agent=user_agent,
         )
-
-        page = await context.new_page()
+        # A persistent context opens with a page already; reuse it instead of adding a blank tab
+        page = context.pages[0] if context.pages else await context.new_page()
         page.set_default_timeout(30_000)  # 30 seconds
 
         try:
@@ -217,12 +216,10 @@ async def _playwright_book_court(
             return signed_payment_url
 
         except PlaywrightTimeoutError as e:
-            raise RuntimeError(f"PLAYWRIGHT BOOK COURT: timed out - {e}")
+            raise RuntimeError(f"PLAYWRIGHT BOOK COURT FAILED: timed out - {e}")
 
         finally:
-            await context.storage_state(path=STORAGE_STATE_PATH)
             await context.close()
-            await browser.close()
             print("")
 
 
