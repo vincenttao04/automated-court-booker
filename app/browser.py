@@ -109,11 +109,11 @@ async def _playwright_login(
 
             # Fill in credentials with human-like typing and behaviour
             print("browser: entering credentials")
-            await human_pause(0.8, 1.2)
-            await human_type(number, user_number, 0.05, 0.08)
+            await human_pause(0.6, 1.0)
+            await human_type(number, user_number, 0.03, 0.08)
+            await human_pause(0.2, 0.5)
+            await human_type(password, user_password, 0.05, 0.09)
             await human_pause(0.3, 0.6)
-            await human_type(password, user_password, 0.07, 0.1)
-            await human_pause(0.4, 0.7)
 
             # Capture the login API response
             print("browser: submitting login")
@@ -178,7 +178,7 @@ async def _playwright_book_court(
             # Navigate to booking create page
             print("browser: loading booking page")
             await page.goto(url, wait_until="networkidle")
-            await human_pause(1.0, 1.75)
+            await human_pause(0.2, 0.6)
 
             # Capture the create booking API response
             print("browser: creating booking")
@@ -195,12 +195,12 @@ async def _playwright_book_court(
             # Navigate to the payment page and click the "Pay Now" button
             print("browser: proceeding to payment")
             await page.wait_for_selector('button:has-text("Pay Now")', timeout=30_000)
-            await human_pause(1.0, 1.75)
+            await human_pause(0.2, 0.6)
 
             await page.click('button:has-text("Pay Now")')
 
             await page.wait_for_load_state("networkidle")
-            await human_pause(1.0, 1.75)
+            await human_pause(0.2, 0.6)
 
             payment_page_html = await page.content()
 
