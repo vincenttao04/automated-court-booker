@@ -1,5 +1,6 @@
 # Standard Library
 import asyncio
+from datetime import datetime, timedelta
 import json
 import os
 import random
@@ -16,6 +17,7 @@ from playwright.async_api import (
 )
 
 # Local Application Imports
+from app.constants import NZ_TZ, PREWARM_LEAD_SECONDS
 from app.models import BookingInformation
 from app.utils import check_status
 
@@ -29,6 +31,13 @@ BOOKING_API = os.getenv("BOOKING_API")
 CHROME_PROFILE_PATH = os.getenv("CHROME_PROFILE_PATH")
 
 _cached_user_agent: str | None = None
+
+
+# Helper function: sleep until a given moment, returning immediately if it has passed
+async def sleep_until(moment: datetime) -> None:
+    remaining = (moment - datetime.now(NZ_TZ)).total_seconds()
+    if remaining > 0:
+        await asyncio.sleep(remaining)
 
 
 # Helper function: fetch the corrected user agent string
@@ -146,7 +155,7 @@ def browser_login(user_number: str, user_password: str) -> dict:
 
 
 async def _playwright_book_court(
-    booking_info: BookingInformation, user_agent: str
+    booking_info: BookingInformation, user_agent: str, target: datetime | None
 ) -> str:
     if not BOOKING_API or not SCHEDULE_URL or not CHROME_PROFILE_PATH:
         raise RuntimeError(
@@ -223,5 +232,7 @@ async def _playwright_book_court(
             print("")
 
 
-def browser_book_court(booking_info: BookingInformation) -> str:
-    return asyncio.run(_playwright_book_court(booking_info, get_user_agent()))
+def browser_book_court(
+    booking_info: BookingInformation, target: datetime | None
+) -> str:
+    return asyncio.run(_playwright_book_court(booking_info, get_user_agent(), target))

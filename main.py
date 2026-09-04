@@ -49,7 +49,7 @@ def main():
             print("================ FINISH ================")
             return
 
-        book_all_available(session, criteria, booking_info)
+        book_all_available(session, criteria, booking_info, target)
 
         logout(session)
 
