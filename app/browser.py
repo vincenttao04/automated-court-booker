@@ -163,8 +163,12 @@ async def _playwright_book_court(
         )
 
     async with async_playwright() as p:
+        # Hold off launching so the loaded page and minted reCAPTCHA token stays fresh
+        if target is not None:
+            await sleep_until(target - timedelta(seconds=PREWARM_LEAD_SECONDS))
+
+        # Persistent Chrome profile provides the browsing identity reCAPTCHA v3 scores on
         context = await p.chromium.launch_persistent_context(
-            # Persistent Chrome profile provides the browsing identity reCAPTCHA v3 scores on
             user_data_dir=CHROME_PROFILE_PATH,
             headless=True,
             channel="chrome",
@@ -184,10 +188,18 @@ async def _playwright_book_court(
             )
             url = f"{SCHEDULE_URL}/payment/booking-info?data={encoded_data}"
 
-            # Navigate to booking create page
+            # The page renders client-side from the URL, so it can be loaded before the
+            # booking window opens; only the Continue click is validated server-side
             print("browser: loading booking page")
             await page.goto(url, wait_until="networkidle")
-            await human_pause(0.2, 0.6)
+            await page.wait_for_selector('button:has-text("Continue")')
+
+            if target is None:
+                await human_pause(0.2, 0.6)
+            else:
+                spare = (target - datetime.now(NZ_TZ)).total_seconds()
+                print(f"browser: ready with {spare:.1f}s to spare")
+                await sleep_until(target)
 
             # Capture the create booking API response
             print("browser: creating booking")
