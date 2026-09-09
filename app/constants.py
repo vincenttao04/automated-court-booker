@@ -9,7 +9,7 @@ WEEKS_IN_ADVANCE = 3
 DAYS_IN_ADVANCE = 1
 
 MAX_WAIT_SECONDS = 121  # give up if the target is further away than this
-PREWARM_LEAD_SECONDS = 20  # load the booking page this long before the target
+PREWARM_LEAD_SECONDS = 8  # load the booking page this long before the target
 
 DEFAULT_START = "06:00"
 DEFAULT_END = "23:00"

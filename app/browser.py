@@ -118,11 +118,11 @@ async def _playwright_login(
 
             # Fill in credentials with human-like typing and behaviour
             print("browser: entering credentials")
-            await human_pause(0.6, 1.0)
-            await human_type(number, user_number, 0.03, 0.08)
-            await human_pause(0.2, 0.5)
-            await human_type(password, user_password, 0.05, 0.09)
-            await human_pause(0.3, 0.6)
+            await human_pause(0.8, 1.4)
+            await human_type(number, user_number, 0.05, 0.12)
+            await human_pause(0.5, 1.0)
+            await human_type(password, user_password, 0.08, 0.2)
+            await human_pause(1.0, 1.6)
 
             # Capture the login API response
             print("browser: submitting login")
@@ -195,10 +195,10 @@ async def _playwright_book_court(
             await page.wait_for_selector('button:has-text("Continue")')
 
             if target is None:
-                await human_pause(0.2, 0.6)
+                await human_pause(0.2, 0.35)
             else:
                 spare = (target - datetime.now(NZ_TZ)).total_seconds()
-                print(f"browser: ready with {spare:.1f}s to spare")
+                print(f"browser: ready with {spare:.4f}s to spare")
                 await sleep_until(target)
 
             # Capture the create booking API response
@@ -216,12 +216,12 @@ async def _playwright_book_court(
             # Navigate to the payment page and click the "Pay Now" button
             print("browser: proceeding to payment")
             await page.wait_for_selector('button:has-text("Pay Now")', timeout=30_000)
-            await human_pause(0.2, 0.6)
+            await human_pause(0.2, 0.35)
 
             await page.click('button:has-text("Pay Now")')
 
             await page.wait_for_load_state("networkidle")
-            await human_pause(0.2, 0.6)
+            await human_pause(0.2, 0.35)
 
             payment_page_html = await page.content()
 
