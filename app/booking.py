@@ -210,10 +210,10 @@ PRIORITY_HANDLER = {
 }
 
 
-def book_court(booking_info: BookingInformation) -> str:
+def book_court(booking_info: BookingInformation, target: datetime | None) -> str:
     # Book court with browser automation
     return browser_book_court(
-        booking_info
+        booking_info, target
     )  # returns user_id and booking_id as integers
 
 
@@ -238,15 +238,19 @@ def book_all_available(
     session: requests.Session,
     criteria: BookingCriteria,
     booking_info: BookingInformation | None,
+    target: datetime | None,
 ):
     count = 1
     while booking_info is not None:
         try:
-            signed_payment_url = book_court(booking_info)
+            signed_payment_url = book_court(booking_info, target)
             pay_court(session, signed_payment_url, count)
             schedule = get_court_schedule(session, criteria)
             booking_info = identify_courts(schedule, criteria)
+
+            target = None  # only first booking waits; later cycles fire immediately
             count += 1
+
         except RuntimeError as e:
             print(f"Error: {e}")
             break
