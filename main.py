@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Local Application Imports
 from app.booking import book_all_available, get_court_schedule, identify_courts
-from app.scheduler import fetch_criteria, is_near_target
+from app.scheduler import fetch_criteria, resolve_target
 from app.user import create_session, login, logout
 
 # Helper function: override the built-in print function to include timestamps for better logging
@@ -42,12 +42,14 @@ def main():
 
         session = login()
 
-        if not is_near_target():
+        target = resolve_target()
+
+        if target is None:
             logout(session)
             print("================ FINISH ================")
             return
 
-        book_all_available(session, criteria, booking_info)
+        book_all_available(session, criteria, booking_info, target)
 
         logout(session)
 

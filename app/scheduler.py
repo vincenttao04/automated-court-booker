@@ -1,7 +1,5 @@
 # Standard Library
-import time
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
 # Local Application Imports
 from app.config_loader import load_config
@@ -16,26 +14,14 @@ from app.constants import (
     TARGET_TIME,
     WEEKS_IN_ADVANCE,
     DAYS_IN_ADVANCE,
+    MAX_WAIT_SECONDS,
 )
 from app.models import BookingCriteria
 
 
-def wait_until_target(wait_time: timedelta) -> bool:
-    # If the wait time is more than 121 seconds, exit
-    if wait_time > timedelta(seconds=121):
-        print(f"[error] wait time exceeds 121 seconds\n")
-        return False
-
-    print("time until project runs: ", str(wait_time))
-    time.sleep(wait_time.total_seconds())  # sleep until the target time
-
-    print(
-        f"app starting at: {datetime.now(ZoneInfo('Pacific/Auckland')).isoformat()}\n"
-    )
-    return True
-
-
-def is_near_target() -> bool:
+# Resolve the next target time, or None if it is too far away to be worth waiting for.
+# Does not sleep; the wait happens in browser.py so the booking page can be loaded first.
+def resolve_target() -> datetime | None:
     # Convert string into datetime object
     target_time = datetime.strptime(TARGET_TIME, "%H:%M:%S").time()
     now = datetime.now(NZ_TZ)
@@ -52,7 +38,13 @@ def is_near_target() -> bool:
         run_at += timedelta(days=1)
 
     wait_time = run_at - now
-    return wait_until_target(wait_time)
+
+    if wait_time > timedelta(seconds=MAX_WAIT_SECONDS):
+        print(f"[error] wait time exceeds {MAX_WAIT_SECONDS} seconds\n")
+        return None
+
+    print("time until target:", str(wait_time))
+    return run_at
 
 
 def fetch_criteria() -> BookingCriteria | None:
